@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/select";
 import Helpers from "@/config/helpers";
 import settingService from "@/services/admin/setting.service";
+import twilioService, { TwilioLogEntry } from "@/services/admin/twilio.service";
 import { Settings, Model, TwilioSettings, ErrorResponse } from "@/types/setting";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText, Settings as SettingsIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AxiosError } from "axios";
 
@@ -33,6 +34,9 @@ const Setting = () => {
   const [loading, setLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [twilioUpdateLoading, setTwilioUpdateLoading] = useState(false);
+  const [showTwilioLogs, setShowTwilioLogs] = useState(true); // Default to logs but preserve toggle functionality
+  const [twilioLogs, setTwilioLogs] = useState<TwilioLogEntry[]>([]);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   const fetchSettings = async () => {
     try {
@@ -66,6 +70,25 @@ const Setting = () => {
     fetchSettings();
     fetchTwilioSettings();
   }, []);
+
+  // Real-time log polling when logs view is active
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+
+    if (showTwilioLogs) {
+      // Fetch logs immediately when switching to logs view
+      fetchTwilioLogs();
+      
+      // Set up polling every 5 seconds
+      interval = setInterval(fetchTwilioLogs, 5000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [showTwilioLogs]);
 
   const handleUpdate = async () => {
     try {
@@ -112,6 +135,40 @@ const Setting = () => {
     }));
   };
 
+  const fetchTwilioLogs = async () => {
+    try {
+      setLogsLoading(true);
+      const logs = await twilioService.getRecentLogs(50);
+      setTwilioLogs(logs);
+    } catch (error: unknown) {
+      console.error("Failed to fetch Twilio logs:", error);
+      // Don't show error toast for logs - it's not critical
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const formatLogEntry = (log: TwilioLogEntry): string => {
+    const timestamp = new Date(log.createdAt).toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+    
+    const messagePreview = log.messageBody.length > 50 
+      ? `${log.messageBody.substring(0, 50)}...` 
+      : log.messageBody;
+    
+    const testFlag = log.isTestMessage ? '[TEST]' : '[REAL]';
+    const statusFlag = log.status.toUpperCase();
+    
+    return `[${timestamp}] ${log.fromNumber} → ${log.toNumber}: ${messagePreview} ${testFlag} ${statusFlag}`;
+  };
+
   const handleTwilioChange = (field: keyof TwilioSettings, value: string) => {
     setTwilioSettings((prev) => ({
       ...prev,
@@ -132,10 +189,99 @@ const Setting = () => {
       {/* Twilio Settings Card */}
       <Card className="bg-card w-full mx-auto shadow-md">
         <CardHeader>
-          <CardTitle className="text-card-foreground">Twilio Settings</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-card-foreground">
+              {showTwilioLogs ? "Twilio Logs" : "Twilio Settings"}
+            </CardTitle>
+            {/* Toggle button temporarily hidden - all functionality preserved for future re-enabling
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTwilioLogs(!showTwilioLogs)}
+              className="h-8 w-8 p-0"
+              title={showTwilioLogs ? "View Settings" : "View Logs"}
+            >
+              {showTwilioLogs ? (
+                <SettingsIcon className="h-4 w-4" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+            </Button>
+            */}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          {showTwilioLogs ? (
+            // Terminal-style Twilio Logs Viewer
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {logsLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Real-time • Updates every 5s • Last {twilioLogs.length} messages
+                </div>
+              </div>
+              
+              {/* Terminal-style log container */}
+              <div className="bg-gray-100 text-gray-700 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto border">
+                {twilioLogs.length === 0 ? (
+                  <div className="text-gray-500 text-center py-8">
+                    {logsLoading ? "Loading logs..." : "No logs found. Test the webhook to see messages appear here."}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {twilioLogs.map((log) => {
+                      const logLine = formatLogEntry(log);
+                      const lineColor = log.status === 'error' || log.status === 'failed' 
+                        ? 'text-red-600' 
+                        : log.isTestMessage 
+                        ? 'text-yellow-600' 
+                        : 'text-green-700';
+                      
+                      return (
+                        <div 
+                          key={log.id} 
+                          className={`${lineColor} hover:bg-gray-200 px-2 py-1 rounded cursor-pointer transition-colors`}
+                          title={`Full message: ${log.messageBody}\nProcessing time: ${log.processingTimeMs || 'N/A'}ms\nMessage SID: ${log.messageSid}`}
+                        >
+                          {logLine}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              
+              {/* Log controls */}
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center space-x-4">
+                  <span className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span>Real Messages</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                    <span>Test Messages</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                    <span>Errors</span>
+                  </span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={fetchTwilioLogs}
+                  disabled={logsLoading}
+                >
+                  {logsLoading ? "Refreshing..." : "Refresh Now"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // Twilio Settings Form - Fully preserved for future re-enabling
+            <div className="space-y-4">
             <div>
               <label htmlFor="twilioAccountSid" className="block text-sm font-medium">
                 Account SID
@@ -178,7 +324,8 @@ const Setting = () => {
             <Button onClick={handleTwilioUpdate} disabled={loading || twilioUpdateLoading}>
               {twilioUpdateLoading ? "Updating..." : "Update Twilio Settings"}
             </Button>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

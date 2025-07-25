@@ -138,3 +138,14 @@ backend/temp/
 # Frontend specific
 frontend/dist/
 frontend/.vite/
+
+# Production & Database Scripts (contains sensitive data)
+PostgreSQL-ProdUpdate.sql
+*.prod.sql
+*-production.sql
+database-updates/
+db-migrations/
+
+# Logs directory
+logs/
+*.log
