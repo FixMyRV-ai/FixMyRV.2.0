@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Modern Color Palette */
+  --gradient-start: hsl(210 40% 98%);
+  --gradient-middle: hsl(210 40% 96.1%);
+  --gradient-end: hsl(210 40% 94.1%);
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(221.2 83.2% 53.3%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96.1%);
+  --secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --muted: hsl(210 40% 96.1%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96.1%);
+  --accent-foreground: hsl(222.2 47.4% 11.2%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(221.2 83.2% 53.3%);
+  --chart-1: hsl(221.2 83.2% 53.3%);
+  --chart-2: hsl(142.1 76.2% 36.3%);
+  --chart-3: hsl(346.8 77.2% 49.8%);
+  --chart-4: hsl(43.3 96.4% 56.3%);
+  --chart-5: hsl(262.1 83.3% 57.8%);
+  --radius: 0.75rem;
+}
+
+.dark {
+  --gradient-start: hsl(220 13% 18%);
+  --gradient-middle: hsl(220 13% 16%);
+  --gradient-end: hsl(220 13% 14%);
+  --background: hsl(220 13% 18%);
+  --foreground: hsl(0, 0%, 100%); /* White font color */
+  --card: hsl(220 13% 18%);
+  --card-foreground: hsl(0, 0%, 100%); /* White font color */
+  --popover: hsl(220 13% 18%);
+  --popover-foreground: hsl(0, 0%, 100%); /* White font color */
+  --primary: hsl(0, 0%, 100%); /* White font color */
+  --primary-foreground: hsl(220 13% 18%);
+  --secondary: hsl(220 13% 22%);
+  --secondary-foreground: hsl(0, 0%, 100%); /* White font color */
+  --muted: hsl(220 13% 22%);
+  --muted-foreground: hsl(0, 0%, 100%); /* White font color */
+  --accent: hsl(220 13% 22%);
+  --accent-foreground: hsl(0, 0%, 100%); /* White font color */
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0, 0%, 100%); /* White font color */
+  --border: hsl(220 13% 22%);
+  --input: hsl(220 13% 22%);
+  --ring: hsl(0, 0%, 100%); /* White font color */
+  --chart-1: hsl(0, 0%, 100%); /* White font color */
+  --chart-2: hsl(142.1 70.6% 45.3%);
+  --chart-3: hsl(346.8 77.2% 49.8%);
+  --chart-4: hsl(43.3 96.4% 56.3%);
+  --chart-5: hsl(262.1 83.3% 57.8%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+  h3 {
+    @apply text-2xl md:text-3xl lg:text-4xl;
+  }
+  p {
+    @apply leading-7;
+  }
+  a {
+    @apply text-primary hover:text-primary/80 transition-colors;
+  }
+  button {
+    @apply rounded-md transition-all duration-200;
+  }
+}
+
+.body {
+  background: linear-gradient(
+    135deg,
+    var(--gradient-start),
+    var(--gradient-middle),
+    var(--gradient-end)
+  );
+  min-height: 100vh;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50 transition-colors;
+}
+
+/* Card Styles */
+.card {
+  @apply bg-card text-card-foreground rounded-lg border shadow-sm;
+  transition: all 0.2s ease-in-out;
+}
+
+.card:hover {
+  @apply shadow-md;
+}
+
+/* Input Styles */
+.input {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+/* Button Variants */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.btn-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Container Styles */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl;
+}
+
+/* Section Styles */
+.section {
+  @apply py-12 md:py-16 lg:py-20;
+}
+
+/* Grid Layout */
+.grid-layout {
+  @apply grid gap-6 sm:grid-cols-2 lg:grid-cols-3;
+}
+
+/* Modern Layout Styles */
+.chat-layout {
+  @apply flex h-screen overflow-hidden;
+  background: linear-gradient(
+    135deg,
+    var(--gradient-start),
+    var(--gradient-middle),
+    var(--gradient-end)
+  );
+}
+
+.chat-container {
+  @apply flex flex-col flex-1 overflow-hidden;
+}
+
+.chat-content {
+  @apply flex-1 overflow-hidden relative;
+}
+
+.chat-overlay {
+  @apply absolute inset-0 pointer-events-none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--gradient-middle) / 30%
+  );
+}
