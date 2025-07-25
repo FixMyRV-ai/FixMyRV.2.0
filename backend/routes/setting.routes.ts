@@ -6,8 +6,12 @@ const settingRouter = Router();
 
 settingRouter.use(authMiddleware);
 
-// Message routes
+// OpenAI Settings routes
 settingRouter.post("/", SettingController.update as RequestHandler);
 settingRouter.get("/", SettingController.read as RequestHandler);
+
+// Twilio Settings routes
+settingRouter.post("/twilio", SettingController.updateTwilioSettings as RequestHandler);
+settingRouter.get("/twilio", SettingController.readTwilioSettings as RequestHandler);
 
 export default settingRouter;

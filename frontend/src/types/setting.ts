@@ -6,6 +6,12 @@ export interface Settings {
   systemPrompt: string;
 }
 
+export interface TwilioSettings {
+  accountSid: string;
+  authToken: string;
+  phoneNumber: string;
+}
+
 export interface Model {
   id: string;
   object: string;
@@ -16,6 +22,10 @@ export interface Model {
 export interface SettingsResponse {
   data: Settings;
   models: Model[];
+}
+
+export interface TwilioSettingsResponse {
+  data: TwilioSettings;
 }
 
 export interface ErrorResponse {

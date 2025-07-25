@@ -10,6 +10,7 @@ import settingRouter from "./routes/setting.routes";
 import planRouter from "./routes/plan.routes";
 import stripeRouter from "./routes/stripe.routes";
 import transactionRouter from "./routes/transaction.routes";
+import twilioRouter from "./routes/twilio.routes";
 const app = express();
 
 app.use(cors()); // Enable CORS for cross-origin requests
@@ -34,6 +35,7 @@ v1Router.use("/setting", settingRouter);
 v1Router.use("/plan", planRouter);
 v1Router.use("/stripe", stripeRouter);
 v1Router.use("/transaction", transactionRouter);
+v1Router.use("/twilio", twilioRouter);
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {

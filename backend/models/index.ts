@@ -5,6 +5,8 @@ import initChatModel from "./chat";
 import initMessageModel from "./message";
 import initSettingmodel from "./setting";
 import initSourceContentmodel from "./sourceContent";
+import initTwilioSettingModel from "./twilioSetting";
+import initTwilioLogModel from "./twilioLog";
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ const Chat = initChatModel(sequelize);
 const Message = initMessageModel(sequelize);
 const Setting = initSettingmodel(sequelize);
 const SourceContent = initSourceContentmodel(sequelize);
+const TwilioSetting = initTwilioSettingModel(sequelize);
+const TwilioLog = initTwilioLogModel(sequelize);
 
 User.hasMany(Chat, {
   foreignKey: "userId",
@@ -55,5 +59,7 @@ export {
   Message,
   Setting,
   SourceContent,
+  TwilioSetting,
+  TwilioLog,
 };
 export default sequelize;

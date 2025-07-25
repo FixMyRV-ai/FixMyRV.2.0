@@ -1,0 +1,539 @@
+import { Request, Response } from "express";
+import { TwilioSetting, TwilioLog } from "../models";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+
+interface TwilioWebhookRequest extends Request {
+  body: {
+    MessageSid: string;
+    AccountSid: string;
+    From: string;
+    To: string;
+    Body: string;
+    NumMedia?: string;
+    [key: string]: any;
+  };
+  headers: {
+    'x-twilio-signature'?: string;
+    [key: string]: any;
+  };
+}
+
+interface TwilioWebhookResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}
+
+/**
+ * Logs Twilio webhook to database and file
+ */
+const logTwilioWebhook = async (
+  messageSid: string,
+  accountSid: string,
+  fromNumber: string,
+  toNumber: string,
+  messageBody: string,
+  numMedia: number = 0,
+  webhookUrl: string,
+  isTestMessage: boolean = false,
+  status: 'received' | 'processed' | 'failed' | 'error' = 'received',
+  errorMessage?: string,
+  processingTimeMs?: number,
+  rawPayload?: object
+): Promise<void> => {
+  try {
+    // Database logging
+    await TwilioLog.create({
+      messageSid,
+      accountSid,
+      fromNumber,
+      toNumber,
+      messageBody,
+      messageType: 'inbound',
+      status,
+      errorMessage,
+      numMedia,
+      webhookUrl,
+      isTestMessage,
+      processingTimeMs,
+      rawPayload,
+    });
+
+    // File logging for debugging
+    const logDir = path.join(process.cwd(), 'logs');
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+
+    const logEntry = {
+      timestamp: new Date().toISOString(),
+      messageSid,
+      accountSid,
+      from: fromNumber,
+      to: toNumber,
+      body: messageBody,
+      status,
+      isTest: isTestMessage,
+      processingTimeMs,
+      error: errorMessage,
+    };
+
+    const logLine = JSON.stringify(logEntry) + '\n';
+    const logFile = path.join(logDir, `twilio-${new Date().toISOString().split('T')[0]}.log`);
+    
+    fs.appendFileSync(logFile, logLine);
+
+    console.log('📝 Twilio webhook logged:', {
+      messageSid,
+      status,
+      isTest: isTestMessage,
+      processingTime: processingTimeMs ? `${processingTimeMs}ms` : 'N/A'
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to log Twilio webhook:', error);
+    // Don't throw error - logging failure shouldn't break webhook processing
+  }
+};
+
+/**
+ * Validates Twilio webhook signature
+ * @param authToken - Twilio auth token from settings
+ * @param signature - X-Twilio-Signature header value
+ * @param url - The full webhook URL
+ * @param params - The webhook parameters
+ * @returns boolean indicating if signature is valid
+ */
+const validateTwilioSignature = (
+  authToken: string,
+  signature: string,
+  url: string,
+  params: Record<string, any>
+): boolean => {
+  // Create the expected signature
+  const data = Object.keys(params)
+    .sort()
+    .reduce((acc, key) => acc + key + params[key], url);
+  
+  const expectedSignature = crypto
+    .createHmac('sha1', authToken)
+    .update(Buffer.from(data, 'utf-8'))
+    .digest('base64');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+};
+
+/**
+ * Receives incoming Twilio SMS webhook
+ * POST /api/v1/twilio/webhook/sms
+ */
+export const receiveSmsWebhook = async (
+  req: TwilioWebhookRequest,
+  res: Response<TwilioWebhookResponse>
+): Promise<void> => {
+  const startTime = Date.now();
+  
+  try {
+    const { MessageSid, AccountSid, From, To, Body, NumMedia } = req.body;
+    const twilioSignature = req.headers['x-twilio-signature'];
+    const webhookUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+    console.log('📱 Incoming Twilio SMS webhook:', {
+      MessageSid,
+      AccountSid,
+      From,
+      To,
+      Body: Body?.substring(0, 100) + (Body?.length > 100 ? '...' : ''),
+      NumMedia
+    });
+
+    // Get Twilio settings from database
+    const twilioSettings = await TwilioSetting.findOne();
+    
+    if (!twilioSettings) {
+      const errorMsg = 'Twilio settings not configured';
+      console.error('❌ No Twilio settings found in database');
+      
+      // Log the failed attempt
+      await logTwilioWebhook(
+        MessageSid,
+        AccountSid,
+        From,
+        To,
+        Body,
+        NumMedia ? parseInt(NumMedia) : 0,
+        webhookUrl,
+        false,
+        'error',
+        errorMsg,
+        Date.now() - startTime,
+        req.body
+      );
+      
+      res.status(500).json({
+        success: false,
+        message: errorMsg,
+        error: 'No Twilio configuration found'
+      });
+      return;
+    }
+
+    // Validate AccountSid matches our settings
+    if (AccountSid !== twilioSettings.accountSid) {
+      const errorMsg = 'AccountSid does not match configured settings';
+      console.error('❌ AccountSid mismatch:', {
+        received: AccountSid,
+        expected: twilioSettings.accountSid
+      });
+      
+      // Log the failed attempt
+      await logTwilioWebhook(
+        MessageSid,
+        AccountSid,
+        From,
+        To,
+        Body,
+        NumMedia ? parseInt(NumMedia) : 0,
+        webhookUrl,
+        false,
+        'failed',
+        errorMsg,
+        Date.now() - startTime,
+        req.body
+      );
+      
+      res.status(403).json({
+        success: false,
+        message: 'Invalid AccountSid',
+        error: errorMsg
+      });
+      return;
+    }
+
+    // Validate Twilio signature (skip in development if no signature provided)
+    if (twilioSignature && process.env.NODE_ENV === 'production') {
+      const isValidSignature = validateTwilioSignature(
+        twilioSettings.authToken,
+        twilioSignature,
+        webhookUrl,
+        req.body
+      );
+
+      if (!isValidSignature) {
+        const errorMsg = 'Twilio signature validation failed';
+        console.error('❌ Invalid Twilio signature');
+        
+        // Log the failed attempt
+        await logTwilioWebhook(
+          MessageSid,
+          AccountSid,
+          From,
+          To,
+          Body,
+          NumMedia ? parseInt(NumMedia) : 0,
+          webhookUrl,
+          false,
+          'failed',
+          errorMsg,
+          Date.now() - startTime,
+          req.body
+        );
+        
+        res.status(403).json({
+          success: false,
+          message: 'Invalid signature',
+          error: errorMsg
+        });
+        return;
+      }
+    } else if (!twilioSignature) {
+      console.warn('⚠️  No Twilio signature provided (development mode)');
+    }
+
+    // TODO: Add your SMS processing logic here
+    // Examples:
+    // - Save message to database
+    // - Trigger AI response
+    // - Forward to support team
+    // - Update user conversation history
+
+    const processingTime = Date.now() - startTime;
+
+    // Log successful processing
+    await logTwilioWebhook(
+      MessageSid,
+      AccountSid,
+      From,
+      To,
+      Body,
+      NumMedia ? parseInt(NumMedia) : 0,
+      webhookUrl,
+      false,
+      'processed',
+      undefined,
+      processingTime,
+      req.body
+    );
+
+    console.log('✅ SMS processed successfully in', processingTime, 'ms');
+
+    // Respond to Twilio (empty response means "message received")
+    res.status(200).json({
+      success: true,
+      message: 'SMS received and processed',
+      data: {
+        messageSid: MessageSid,
+        processed: true,
+        timestamp: new Date().toISOString(),
+        processingTimeMs: processingTime
+      }
+    });
+
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    console.error('❌ Error processing Twilio SMS webhook:', error);
+    
+    // Try to log the error (use fallback values if request data is unavailable)
+    try {
+      await logTwilioWebhook(
+        req.body?.MessageSid || 'UNKNOWN',
+        req.body?.AccountSid || 'UNKNOWN',
+        req.body?.From || 'UNKNOWN',
+        req.body?.To || 'UNKNOWN',
+        req.body?.Body || '',
+        req.body?.NumMedia ? parseInt(req.body.NumMedia) : 0,
+        `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        false,
+        'error',
+        errorMessage,
+        processingTime,
+        req.body
+      );
+    } catch (logError) {
+      console.error('❌ Failed to log error:', logError);
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: errorMessage
+    });
+  }
+};
+
+/**
+ * Test endpoint for simulating Twilio webhooks locally
+ * POST /api/v1/twilio/test/sms
+ */
+export const testSmsWebhook = async (
+  req: Request,
+  res: Response<TwilioWebhookResponse>
+): Promise<void> => {
+  const startTime = Date.now();
+  
+  try {
+    const { from, to, body } = req.body;
+
+    // Get Twilio settings to use in simulation
+    const twilioSettings = await TwilioSetting.findOne();
+    
+    if (!twilioSettings) {
+      res.status(500).json({
+        success: false,
+        message: 'Twilio settings not configured',
+        error: 'Please configure Twilio settings in admin panel first'
+      });
+      return;
+    }
+
+    // Create a simulated webhook payload
+    const simulatedWebhook = {
+      MessageSid: `SM${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+      AccountSid: twilioSettings.accountSid,
+      From: from || '+1234567890',
+      To: to || twilioSettings.phoneNumber,
+      Body: body || 'Test message from local simulator',
+      NumMedia: '0'
+    };
+
+    console.log('🧪 Simulating Twilio webhook:', simulatedWebhook);
+
+    const webhookUrl = `${req.protocol}://${req.get('host')}/api/v1/twilio/test/sms`;
+    const processingTime = Date.now() - startTime;
+
+    // Log the test message
+    await logTwilioWebhook(
+      simulatedWebhook.MessageSid,
+      simulatedWebhook.AccountSid,
+      simulatedWebhook.From,
+      simulatedWebhook.To,
+      simulatedWebhook.Body,
+      0,
+      webhookUrl,
+      true, // This is a test message
+      'processed',
+      undefined,
+      processingTime,
+      simulatedWebhook
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Test SMS simulated and logged',
+      data: {
+        messageSid: simulatedWebhook.MessageSid,
+        processed: true,
+        timestamp: new Date().toISOString(),
+        processingTimeMs: processingTime,
+        isTest: true
+      }
+    });
+
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    console.error('❌ Error in test SMS webhook:', error);
+    
+    // Try to log the test error
+    try {
+      await logTwilioWebhook(
+        'TEST_ERROR',
+        'TEST_ACCOUNT',
+        req.body?.from || 'UNKNOWN',
+        req.body?.to || 'UNKNOWN',
+        req.body?.body || 'Test message failed',
+        0,
+        `${req.protocol}://${req.get('host')}/api/v1/twilio/test/sms`,
+        true,
+        'error',
+        errorMessage,
+        processingTime,
+        req.body
+      );
+    } catch (logError) {
+      console.error('❌ Failed to log test error:', logError);
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Test webhook failed',
+      error: errorMessage
+    });
+  }
+};
+
+/**
+ * Get webhook status and configuration info
+ * GET /api/v1/twilio/webhook/status
+ */
+export const getWebhookStatus = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const twilioSettings = await TwilioSetting.findOne();
+    
+    if (!twilioSettings) {
+      res.status(200).json({
+        success: false,
+        message: 'Twilio not configured',
+        webhookUrl: `${req.protocol}://${req.get('host')}/api/v1/twilio/webhook/sms`,
+        configured: false
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Twilio webhook ready',
+      webhookUrl: `${req.protocol}://${req.get('host')}/api/v1/twilio/webhook/sms`,
+      testUrl: `${req.protocol}://${req.get('host')}/api/v1/twilio/test/sms`,
+      logsUrl: `${req.protocol}://${req.get('host')}/api/v1/twilio/logs`,
+      configured: true,
+      settings: {
+        accountSid: twilioSettings.accountSid,
+        phoneNumber: twilioSettings.phoneNumber,
+        hasAuthToken: !!twilioSettings.authToken
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error getting webhook status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking webhook status',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Get Twilio webhook logs
+ * GET /api/v1/twilio/logs?limit=50&offset=0&isTest=false
+ */
+export const getTwilioLogs = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const offset = parseInt(req.query.offset as string) || 0;
+    const isTest = req.query.isTest === 'true' ? true : req.query.isTest === 'false' ? false : undefined;
+    const status = req.query.status as string;
+
+    const where: any = {};
+    if (isTest !== undefined) where.isTestMessage = isTest;
+    if (status) where.status = status;
+
+    const logs = await TwilioLog.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+      attributes: [
+        'id',
+        'messageSid',
+        'accountSid',
+        'fromNumber',
+        'toNumber',
+        'messageBody',
+        'messageType',
+        'status',
+        'errorMessage',
+        'numMedia',
+        'isTestMessage',
+        'processingTimeMs',
+        'createdAt'
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Twilio logs retrieved',
+      data: {
+        logs: logs.rows,
+        total: logs.count,
+        limit,
+        offset,
+        hasMore: offset + limit < logs.count
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error getting Twilio logs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving logs',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
