@@ -27,8 +27,22 @@ interface TwilioWebhookResponse {
   error?: string;
 }
 
+interface TwilioGeographicData {
+  fromCity?: string;
+  fromState?: string;
+  fromZip?: string;
+  fromCountry?: string;
+  toCity?: string;
+  toState?: string;
+  toZip?: string;
+  toCountry?: string;
+  smsStatus?: string;
+  numSegments?: string;
+  apiVersion?: string;
+}
+
 /**
- * Logs Twilio webhook to database and file
+ * Logs Twilio webhook to database and file with enhanced geographic data
  */
 const logTwilioWebhook = async (
   messageSid: string,
@@ -45,6 +59,25 @@ const logTwilioWebhook = async (
   rawPayload?: object
 ): Promise<void> => {
   try {
+    // Extract geographic data from rawPayload if available
+    let geographicData: TwilioGeographicData = {};
+    if (rawPayload && typeof rawPayload === 'object') {
+      const payload = rawPayload as any;
+      geographicData = {
+        fromCity: payload.FromCity || payload.fromCity,
+        fromState: payload.FromState || payload.fromState,
+        fromZip: payload.FromZip || payload.fromZip,
+        fromCountry: payload.FromCountry || payload.fromCountry,
+        toCity: payload.ToCity || payload.toCity,
+        toState: payload.ToState || payload.toState,
+        toZip: payload.ToZip || payload.toZip,
+        toCountry: payload.ToCountry || payload.toCountry,
+        smsStatus: payload.SmsStatus || payload.smsStatus,
+        numSegments: payload.NumSegments || payload.numSegments,
+        apiVersion: payload.ApiVersion || payload.apiVersion
+      };
+    }
+
     // Database logging
     await TwilioLog.create({
       messageSid,
@@ -62,7 +95,7 @@ const logTwilioWebhook = async (
       rawPayload,
     });
 
-    // File logging for debugging
+    // Enhanced file logging with geographic data
     const logDir = path.join(process.cwd(), 'logs');
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -79,6 +112,27 @@ const logTwilioWebhook = async (
       isTest: isTestMessage,
       processingTimeMs,
       error: errorMessage,
+      // Enhanced geographic logging
+      location: {
+        from: {
+          city: geographicData.fromCity,
+          state: geographicData.fromState,
+          zip: geographicData.fromZip,
+          country: geographicData.fromCountry
+        },
+        to: {
+          city: geographicData.toCity,
+          state: geographicData.toState,
+          zip: geographicData.toZip,
+          country: geographicData.toCountry
+        }
+      },
+      metadata: {
+        smsStatus: geographicData.smsStatus,
+        numSegments: geographicData.numSegments,
+        apiVersion: geographicData.apiVersion,
+        numMedia
+      }
     };
 
     const logLine = JSON.stringify(logEntry) + '\n';
@@ -90,7 +144,9 @@ const logTwilioWebhook = async (
       messageSid,
       status,
       isTest: isTestMessage,
-      processingTime: processingTimeMs ? `${processingTimeMs}ms` : 'N/A'
+      processingTime: processingTimeMs ? `${processingTimeMs}ms` : 'N/A',
+      location: geographicData.fromCity && geographicData.fromState ? 
+        `${geographicData.fromCity}, ${geographicData.fromState}` : 'Unknown'
     });
 
   } catch (error) {
@@ -340,60 +396,87 @@ export const testSmsWebhook = async (
   const startTime = Date.now();
   
   try {
-    const { from, to, body } = req.body;
-
-    // Get Twilio settings to use in simulation
-    const twilioSettings = await TwilioSetting.findOne();
+    // Support both simplified format (from, to, body) and full Twilio format
+    const isFullFormat = req.body.MessageSid || req.body.SmsMessageSid;
     
-    if (!twilioSettings) {
-      res.status(500).json({
-        success: false,
-        message: 'Twilio settings not configured',
-        error: 'Please configure Twilio settings in admin panel first'
-      });
-      return;
+    let messageData;
+    if (isFullFormat) {
+      // Handle full Twilio webhook format
+      messageData = {
+        MessageSid: req.body.MessageSid || req.body.SmsMessageSid,
+        AccountSid: req.body.AccountSid,
+        From: req.body.From,
+        To: req.body.To,
+        Body: req.body.Body,
+        NumMedia: req.body.NumMedia || '0',
+        FromCity: req.body.FromCity,
+        FromState: req.body.FromState,
+        FromZip: req.body.FromZip,
+        FromCountry: req.body.FromCountry,
+        ToCity: req.body.ToCity,
+        ToState: req.body.ToState,
+        ToZip: req.body.ToZip,
+        ToCountry: req.body.ToCountry,
+        SmsStatus: req.body.SmsStatus || 'received'
+      };
+    } else {
+      // Handle simplified format for backward compatibility
+      const { from, to, body } = req.body;
+
+      // Get Twilio settings to use in simulation
+      const twilioSettings = await TwilioSetting.findOne();
+      
+      if (!twilioSettings) {
+        res.status(500).json({
+          success: false,
+          message: 'Twilio settings not configured',
+          error: 'Please configure Twilio settings in admin panel first'
+        });
+        return;
+      }
+
+      // Create a simulated webhook payload for simplified format
+      messageData = {
+        MessageSid: `SM${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+        AccountSid: twilioSettings.accountSid,
+        From: from || '+1234567890',
+        To: to || twilioSettings.phoneNumber,
+        Body: body || 'Test message from local simulator',
+        NumMedia: '0'
+      };
     }
 
-    // Create a simulated webhook payload
-    const simulatedWebhook = {
-      MessageSid: `SM${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
-      AccountSid: twilioSettings.accountSid,
-      From: from || '+1234567890',
-      To: to || twilioSettings.phoneNumber,
-      Body: body || 'Test message from local simulator',
-      NumMedia: '0'
-    };
-
-    console.log('🧪 Simulating Twilio webhook:', simulatedWebhook);
+    console.log('🧪 Simulating Twilio webhook:', messageData);
 
     const webhookUrl = `${req.protocol}://${req.get('host')}/api/v1/twilio/test/sms`;
     const processingTime = Date.now() - startTime;
 
     // Log the test message
     await logTwilioWebhook(
-      simulatedWebhook.MessageSid,
-      simulatedWebhook.AccountSid,
-      simulatedWebhook.From,
-      simulatedWebhook.To,
-      simulatedWebhook.Body,
-      0,
+      messageData.MessageSid,
+      messageData.AccountSid,
+      messageData.From,
+      messageData.To,
+      messageData.Body,
+      parseInt(messageData.NumMedia) || 0,
       webhookUrl,
       true, // This is a test message
       'processed',
       undefined,
       processingTime,
-      simulatedWebhook
+      messageData
     );
 
     res.status(200).json({
       success: true,
       message: 'Test SMS simulated and logged',
       data: {
-        messageSid: simulatedWebhook.MessageSid,
+        messageSid: messageData.MessageSid,
         processed: true,
         timestamp: new Date().toISOString(),
         processingTimeMs: processingTime,
-        isTest: true
+        isTest: true,
+        format: isFullFormat ? 'full-twilio' : 'simplified'
       }
     });
 
@@ -408,9 +491,9 @@ export const testSmsWebhook = async (
       await logTwilioWebhook(
         'TEST_ERROR',
         'TEST_ACCOUNT',
-        req.body?.from || 'UNKNOWN',
-        req.body?.to || 'UNKNOWN',
-        req.body?.body || 'Test message failed',
+        req.body?.From || req.body?.from || 'UNKNOWN',
+        req.body?.To || req.body?.to || 'UNKNOWN',
+        req.body?.Body || req.body?.body || 'Test message failed',
         0,
         `${req.protocol}://${req.get('host')}/api/v1/twilio/test/sms`,
         true,
