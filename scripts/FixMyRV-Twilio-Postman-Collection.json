@@ -1,0 +1,494 @@
+{
+  "info": {
+    "name": "FixMyRV - Twilio API Testing",
+    "description": "Comprehensive Postman collection for testing FixMyRV Twilio webhook endpoints with realistic payloads",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "FixMyRV Backend Base URL"
+    },
+    {
+      "key": "accountSid",
+      "value": "ACe6b5f98fe1cac6466c45d38169664043",
+      "type": "string",
+      "description": "Twilio Account SID"
+    },
+    {
+      "key": "rvServiceNumber",
+      "value": "+16144678149",
+      "type": "string",
+      "description": "FixMyRV Service Phone Number"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1"]
+        },
+        "description": "Check if the FixMyRV backend is running - returns {Hello: World}"
+      },
+      "response": []
+    },
+    {
+      "name": "Twilio Test Endpoint - Simple Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"from\": \"+15551234567\",\n  \"to\": \"{{rvServiceNumber}}\",\n  \"body\": \"Hi FixMyRV! My RV's generator won't start. Can you help?\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/test/sms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "test", "sms"]
+        },
+        "description": "Test endpoint with simplified format for quick testing"
+      },
+      "response": []
+    },
+    {
+      "name": "Twilio Test Endpoint - Full Realistic Format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ToCountry\": \"US\",\n  \"ToState\": \"OH\",\n  \"SmsMessageSid\": \"SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}\",\n  \"NumMedia\": \"0\",\n  \"ToCity\": \"COLUMBUS\",\n  \"FromZip\": \"78216\",\n  \"SmsSid\": \"SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}\",\n  \"FromState\": \"TX\",\n  \"SmsStatus\": \"received\",\n  \"FromCity\": \"SAN ANTONIO\",\n  \"Body\": \"Emergency! My RV broke down on I-35 near San Antonio. Need immediate assistance!\",\n  \"FromCountry\": \"US\",\n  \"To\": \"{{rvServiceNumber}}\",\n  \"ToZip\": \"43203\",\n  \"NumSegments\": \"1\",\n  \"MessageSid\": \"SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}\",\n  \"AccountSid\": \"{{accountSid}}\",\n  \"From\": \"+12103439989\",\n  \"ApiVersion\": \"2010-04-01\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/test/sms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "test", "sms"]
+        },
+        "description": "Test endpoint with full realistic Twilio webhook format including geographic data"
+      },
+      "response": []
+    },
+    {
+      "name": "Real Twilio Webhook - Emergency",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          },
+          {
+            "key": "User-Agent",
+            "value": "TwilioProxy/1.1"
+          },
+          {
+            "key": "X-Twilio-Signature",
+            "value": "test-signature-for-development",
+            "description": "In development, signature validation is skipped"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "ToCountry",
+              "value": "US"
+            },
+            {
+              "key": "ToState",
+              "value": "OH"
+            },
+            {
+              "key": "SmsMessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "NumMedia",
+              "value": "0"
+            },
+            {
+              "key": "ToCity",
+              "value": "COLUMBUS"
+            },
+            {
+              "key": "FromZip",
+              "value": "33101"
+            },
+            {
+              "key": "SmsSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "FromState",
+              "value": "FL"
+            },
+            {
+              "key": "SmsStatus",
+              "value": "received"
+            },
+            {
+              "key": "FromCity",
+              "value": "MIAMI"
+            },
+            {
+              "key": "Body",
+              "value": "EMERGENCY! My RV is on fire in Miami! Please send help immediately!"
+            },
+            {
+              "key": "FromCountry",
+              "value": "US"
+            },
+            {
+              "key": "To",
+              "value": "{{rvServiceNumber}}"
+            },
+            {
+              "key": "ToZip",
+              "value": "43203"
+            },
+            {
+              "key": "NumSegments",
+              "value": "1"
+            },
+            {
+              "key": "MessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "AccountSid",
+              "value": "{{accountSid}}"
+            },
+            {
+              "key": "From",
+              "value": "+13055551234"
+            },
+            {
+              "key": "ApiVersion",
+              "value": "2010-04-01"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/webhook/sms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "webhook", "sms"]
+        },
+        "description": "Simulate real Twilio webhook for emergency scenario with form-encoded data"
+      },
+      "response": []
+    },
+    {
+      "name": "Real Twilio Webhook - Normal Support",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          },
+          {
+            "key": "User-Agent",
+            "value": "TwilioProxy/1.1"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "ToCountry",
+              "value": "US"
+            },
+            {
+              "key": "ToState",
+              "value": "OH"
+            },
+            {
+              "key": "SmsMessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "NumMedia",
+              "value": "0"
+            },
+            {
+              "key": "ToCity",
+              "value": "COLUMBUS"
+            },
+            {
+              "key": "FromZip",
+              "value": "85001"
+            },
+            {
+              "key": "SmsSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "FromState",
+              "value": "AZ"
+            },
+            {
+              "key": "SmsStatus",
+              "value": "received"
+            },
+            {
+              "key": "FromCity",
+              "value": "PHOENIX"
+            },
+            {
+              "key": "Body",
+              "value": "Hi FixMyRV! My RV's air conditioning stopped working here in Phoenix. It's 115°F outside! Can you help me troubleshoot this?"
+            },
+            {
+              "key": "FromCountry",
+              "value": "US"
+            },
+            {
+              "key": "To",
+              "value": "{{rvServiceNumber}}"
+            },
+            {
+              "key": "ToZip",
+              "value": "43203"
+            },
+            {
+              "key": "NumSegments",
+              "value": "1"
+            },
+            {
+              "key": "MessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "AccountSid",
+              "value": "{{accountSid}}"
+            },
+            {
+              "key": "From",
+              "value": "+16025559876"
+            },
+            {
+              "key": "ApiVersion",
+              "value": "2010-04-01"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/webhook/sms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "webhook", "sms"]
+        },
+        "description": "Simulate real Twilio webhook for normal support request"
+      },
+      "response": []
+    },
+    {
+      "name": "Real Twilio Webhook - Thank You Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          },
+          {
+            "key": "User-Agent",
+            "value": "TwilioProxy/1.1"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "ToCountry",
+              "value": "US"
+            },
+            {
+              "key": "ToState",
+              "value": "OH"
+            },
+            {
+              "key": "SmsMessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "NumMedia",
+              "value": "0"
+            },
+            {
+              "key": "ToCity",
+              "value": "COLUMBUS"
+            },
+            {
+              "key": "FromZip",
+              "value": "80202"
+            },
+            {
+              "key": "SmsSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "FromState",
+              "value": "CO"
+            },
+            {
+              "key": "SmsStatus",
+              "value": "received"
+            },
+            {
+              "key": "FromCity",
+              "value": "DENVER"
+            },
+            {
+              "key": "Body",
+              "value": "Thank you so much FixMyRV! Your guidance helped me fix the generator issue. You guys are amazing!"
+            },
+            {
+              "key": "FromCountry",
+              "value": "US"
+            },
+            {
+              "key": "To",
+              "value": "{{rvServiceNumber}}"
+            },
+            {
+              "key": "ToZip",
+              "value": "43203"
+            },
+            {
+              "key": "NumSegments",
+              "value": "1"
+            },
+            {
+              "key": "MessageSid",
+              "value": "SM{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}{{$randomAlphaNumeric}}"
+            },
+            {
+              "key": "AccountSid",
+              "value": "{{accountSid}}"
+            },
+            {
+              "key": "From",
+              "value": "+17205551111"
+            },
+            {
+              "key": "ApiVersion",
+              "value": "2010-04-01"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/webhook/sms",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "webhook", "sms"]
+        },
+        "description": "Simulate real Twilio webhook for customer thank you message"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Twilio Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/logs?limit=10&page=1",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "logs"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Number of logs to retrieve"
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": "Page number for pagination"
+            }
+          ]
+        },
+        "description": "Retrieve recent Twilio logs from the database"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Webhook Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/twilio/webhook/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "twilio", "webhook", "status"]
+        },
+        "description": "Get webhook configuration status and URLs"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-generate realistic MessageSids for Twilio requests",
+          "if (pm.request.body && pm.request.body.mode === 'urlencoded') {",
+          "    const timestamp = Date.now().toString();",
+          "    const random = Math.random().toString(36).substring(2, 8);",
+          "    const messageSid = 'SM' + timestamp.substring(3) + random;",
+          "    ",
+          "    // Update MessageSid fields",
+          "    pm.request.body.urlencoded.forEach(function(param) {",
+          "        if (param.key === 'MessageSid' || param.key === 'SmsMessageSid' || param.key === 'SmsSid') {",
+          "            param.value = messageSid;",
+          "        }",
+          "    });",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Common test script for all requests",
+          "pm.test('Response status is successful', function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('success');",
+          "});",
+          "",
+          "pm.test('Response time is acceptable', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+          "});",
+          "",
+          "// Log response for debugging",
+          "console.log('Response:', pm.response.json());"
+        ]
+      }
+    }
+  ]
+}
