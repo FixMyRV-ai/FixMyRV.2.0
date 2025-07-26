@@ -71,7 +71,7 @@ Write-Host ""
 
 Write-Host "[2/4] Starting Backend Server..." -ForegroundColor Green
 $backendJob = Start-Job -ScriptBlock {
-    Set-Location "$using:PSScriptRoot\backend"
+    Set-Location "$using:PSScriptRoot\..\backend"
     npm run dev
 }
 Write-Host "Backend server starting (Job ID: $($backendJob.Id))" -ForegroundColor Blue
@@ -89,7 +89,7 @@ Write-Host "✅ Backend is starting up..." -ForegroundColor Green
 
 Write-Host "[3/4] Starting Frontend Server..." -ForegroundColor Green
 $frontendJob = Start-Job -ScriptBlock {
-    Set-Location "$using:PSScriptRoot\frontend"
+    Set-Location "$using:PSScriptRoot\..\frontend"
     npm run dev
 }
 Write-Host "Frontend server starting (Job ID: $($frontendJob.Id))" -ForegroundColor Blue
