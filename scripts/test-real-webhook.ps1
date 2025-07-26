@@ -31,7 +31,7 @@ $sampleWebhooks = @(
         ToZip = "43203"
         NumSegments = "1"
         MessageSid = "SM$(Get-Date -Format 'yyyyMMddHHmmss')$(Get-Random -Minimum 1000 -Maximum 9999)"
-        AccountSid = "ACe6b5f98fe1cac6466c45d38169664043"
+        AccountSid = "YOUR_TWILIO_ACCOUNT_SID_HERE"
         From = "+12103439989"
         ApiVersion = "2010-04-01"
     },
@@ -52,7 +52,7 @@ $sampleWebhooks = @(
         ToZip = "43203"
         NumSegments = "1"
         MessageSid = "SM$(Get-Date -Format 'yyyyMMddHHmmss')$(Get-Random -Minimum 1000 -Maximum 9999)"
-        AccountSid = "ACe6b5f98fe1cac6466c45d38169664043"
+        AccountSid = "YOUR_TWILIO_ACCOUNT_SID_HERE"
         From = "+13055551234"
         ApiVersion = "2010-04-01"
     },
@@ -73,7 +73,7 @@ $sampleWebhooks = @(
         ToZip = "43203"
         NumSegments = "1"
         MessageSid = "SM$(Get-Date -Format 'yyyyMMddHHmmss')$(Get-Random -Minimum 1000 -Maximum 9999)"
-        AccountSid = "ACe6b5f98fe1cac6466c45d38169664043"
+        AccountSid = "YOUR_TWILIO_ACCOUNT_SID_HERE"
         From = "+16025559876"
         ApiVersion = "2010-04-01"
     }

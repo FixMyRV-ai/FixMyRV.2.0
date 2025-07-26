@@ -92,7 +92,7 @@ This comprehensive Postman collection allows you to test all FixMyRV Twilio webh
 | Variable | Default Value | Description |
 |----------|---------------|-------------|
 | `baseUrl` | `http://localhost:3000` | Backend server URL |
-| `accountSid` | `ACe6b5f98fe1cac6466c45d38169664043` | Twilio Account SID |
+| `accountSid` | `YOUR_TWILIO_ACCOUNT_SID_HERE` | Twilio Account SID |
 | `rvServiceNumber` | `+16144678149` | FixMyRV service phone number |
 | `testFromNumber1` | `+12103439989` | Test customer number (San Antonio) |
 | `testFromNumber2` | `+13055551234` | Test customer number (Miami) |

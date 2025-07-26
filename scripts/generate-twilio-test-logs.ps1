@@ -107,7 +107,7 @@ for ($i = 1; $i -le $Count; $i++) {
 
         # Create realistic Twilio webhook payload structure
         $messageSid = "SM$(Get-Date -Format 'yyyyMMddHHmmss')$(Get-Random -Minimum 1000 -Maximum 9999)"
-        $accountSid = "ACe6b5f98fe1cac6466c45d38169664043" # Sample AccountSid
+        $accountSid = "YOUR_TWILIO_ACCOUNT_SID_HERE" # Sample AccountSid
         
         # Sample geographic data for variety
         $locations = @(
