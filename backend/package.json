@@ -6,7 +6,11 @@
   "scripts": {
     "start": "tsx server.ts",
     "dev": "tsx watch server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "build:prod": "tsc -d && npm run build",
+    "build:declarations": "tsc -d",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
   },
   "keywords": [],
   "author": "",
