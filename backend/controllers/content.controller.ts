@@ -24,7 +24,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 class ContentController {
-  private oauth2Client!: import("google-auth-library").JWT;
+  private oauth2Client: import("google-auth-library").JWT | null = null;
+  private isGoogleDriveConfigured = false;
   private SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive.metadata.readonly",
@@ -32,12 +33,20 @@ class ContentController {
   ];
 
   private CREDENTIALS_FILE = path.join(
-    path.dirname(__dirname),
-    "../backend/config/google-credentials.json"
+    __dirname,
+    "../config/google-credentials.json"
   );
+
+  // Helper method to check if Google Drive is configured
+  private isGoogleDriveAvailable(): boolean {
+    return this.isGoogleDriveConfigured && this.oauth2Client !== null;
+  }
 
   constructor() {
     try {
+      console.log("Looking for Google credentials at:", this.CREDENTIALS_FILE);
+      console.log("Current __dirname:", __dirname);
+      
       if (fs.existsSync(this.CREDENTIALS_FILE)) {
         const credentials = JSON.parse(
           fs.readFileSync(this.CREDENTIALS_FILE, "utf8")
@@ -54,16 +63,29 @@ class ContentController {
         // Authorize the service account
         (async () => {
           try {
-            await this.oauth2Client.authorize();
-            console.log("Service account authorized successfully");
+            if (this.oauth2Client) {
+              await this.oauth2Client.authorize();
+              this.isGoogleDriveConfigured = true;
+              console.log("Service account authorized successfully");
+            }
           } catch (err) {
             console.error("Error authorizing service account:", err);
+            this.isGoogleDriveConfigured = false;
           }
         })();
       } else {
         console.warn(
-          "Google Drive service account credentials file not found."
+          "Google Drive service account credentials file not found at:",
+          this.CREDENTIALS_FILE
         );
+        console.log("Available files in config directory:");
+        try {
+          const configDir = path.dirname(this.CREDENTIALS_FILE);
+          const files = fs.readdirSync(configDir);
+          console.log(files);
+        } catch (e) {
+          console.log("Could not read config directory");
+        }
       }
     } catch (error) {
       console.error("Error initializing Google Drive integration:", error);
@@ -458,7 +480,7 @@ class ContentController {
     try {
       const formData = new FormData();
       const fileBuffer = fs.readFileSync(filePath);
-      const fileBlob = new Blob([fileBuffer], { type: "application/pdf" });
+      const fileBlob = new Blob([new Uint8Array(fileBuffer)], { type: "application/pdf" });
       formData.append("file", fileBlob, path.basename(filePath));
 
       const response = await fetch("http://127.0.0.1:8000/extract-text", {

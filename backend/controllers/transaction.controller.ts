@@ -6,11 +6,31 @@ import Stripe from "stripe";
 
 dotenv.config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+// Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
+  : null;
+
+// Helper function to check if Stripe is configured
+const isStripeConfigured = (): boolean => {
+  return stripe !== null && !!process.env.STRIPE_SECRET_KEY;
+};
+
+// Helper function to handle Stripe not configured
+const handleStripeNotConfigured = (res: Response) => {
+  return res.status(503).json({ 
+    error: "Payment service not configured",
+    message: "Stripe is not properly configured on this server" 
+  });
+};
 
 class TransactionController {
   // Get all transactions with pagination and filtering
   static async getAllTransactions(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
@@ -40,7 +60,7 @@ class TransactionController {
         };
       }
 
-      const charges = await stripe.charges.list(queryParams);
+      const charges = await stripe!.charges.list(queryParams);
       // Process transactions to include user information where customer ID exists
       const processedTransactions = await Promise.all(
         charges.data.map(async (charge) => {
@@ -79,6 +99,10 @@ class TransactionController {
 
   // Get transaction statistics
   static async getTransactionStats(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const startDate = req.query.startDate as string;
       const endDate = req.query.endDate as string;
@@ -95,7 +119,7 @@ class TransactionController {
       }
 
       // Get all charges for the period
-      const charges = await stripe.charges.list({
+      const charges = await stripe!.charges.list({
         ...dateFilter,
         limit: limit, // Adjust based on your needs
       });
