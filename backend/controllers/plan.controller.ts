@@ -4,10 +4,30 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+// Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
+  : null;
+
+// Helper function to check if Stripe is configured
+const isStripeConfigured = (): boolean => {
+  return stripe !== null && !!process.env.STRIPE_SECRET_KEY;
+};
+
+// Helper function to handle Stripe not configured
+const handleStripeNotConfigured = (res: Response) => {
+  return res.status(503).json({ 
+    error: "Payment service not configured",
+    message: "Stripe is not properly configured on this server" 
+  });
+};
 
 class PlanController {
   static async createPlan(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const {
         name,
@@ -28,7 +48,7 @@ class PlanController {
       };
 
       // Create a plan in Stripe
-      const plan = await stripe.products.create({
+      const plan = await stripe!.products.create({
         name,
         description: description || "",
         active: active,
@@ -36,7 +56,7 @@ class PlanController {
       });
 
       // Create a price for the plan
-      const price = await stripe.prices.create({
+      const price = await stripe!.prices.create({
         product: plan.id,
         unit_amount: Math.round(unitAmount * 100), // Convert to cents
         currency,
@@ -44,12 +64,12 @@ class PlanController {
       });
 
       // Set as default price
-      await stripe.products.update(plan.id, {
+      await stripe!.products.update(plan.id, {
         default_price: price.id,
       });
 
       // Fetch the complete plan with price data
-      const updatedPlan = await stripe.products.retrieve(plan.id, {
+      const updatedPlan = await stripe!.products.retrieve(plan.id, {
         expand: ["default_price"],
       });
       const response = {
@@ -101,11 +121,15 @@ class PlanController {
   }
 
   static async getAllPlans(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const offset = (page - 1) * limit;
-      const stripePlans = await stripe.products.list({
+      const stripePlans = await stripe!.products.list({
         expand: ["data.default_price"],
         limit: limit,
         starting_after: offset > 0 ? offset.toString() : undefined,
@@ -188,6 +212,10 @@ class PlanController {
   }
 
   static async updatePlan(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const { id } = req.params;
       const {
@@ -211,7 +239,7 @@ class PlanController {
       };
 
       // Update    in Stripe
-      const plan = await stripe.products.update(id, {
+      const plan = await stripe!.products.update(id, {
         name,
         description: description || "",
         active,
@@ -220,7 +248,7 @@ class PlanController {
 
       let price = null;
       if (unitAmount !== undefined) {
-        price = await stripe.prices.create({
+        price = await stripe!.prices.create({
           product: id,
           unit_amount: Math.round(unitAmount * 100), // Convert to cents
           currency,
@@ -228,13 +256,13 @@ class PlanController {
         });
 
         // Set as default price
-        await stripe.products.update(id, {
+        await stripe!.products.update(id, {
           default_price: price.id,
         });
       }
 
       // Fetch the updated plan with price data
-      const updatedPlan = await stripe.products.retrieve(id, {
+      const updatedPlan = await stripe!.products.retrieve(id, {
         expand: ["default_price"],
       });
 
@@ -316,11 +344,15 @@ class PlanController {
   }
 
   static async planStatus(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     try {
       const { id } = req.params;
       const { active } = req.body;
 
-      const plan = await stripe.products.update(id, {
+      const plan = await stripe!.products.update(id, {
         active,
       });
 
