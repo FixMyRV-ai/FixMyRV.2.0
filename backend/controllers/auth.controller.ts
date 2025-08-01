@@ -14,7 +14,10 @@ import emailService from "../services/email.service";
 type UserModel = UserType & SequelizeModel;
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+// Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
+  : null;
 
 dotenv.config();
 
@@ -198,14 +201,16 @@ const authController = {
         password,
       });
 
-      // create stripe customer id
-      const customer = await stripe.customers.create({
-        name: `${firstName} ${lastName}`,
-        email,
-      });
+      // create stripe customer id (only if stripe is configured)
+      if (stripe) {
+        const customer = await stripe.customers.create({
+          name: `${firstName} ${lastName}`,
+          email,
+        });
 
-      // Update user with Stripe customer ID
-      await newUser.update({ stripeCustomerId: customer.id });
+        // Update user with Stripe customer ID
+        await newUser.update({ stripeCustomerId: customer.id });
+      }
 
       // Send confirmation email
       await authController.sendConfirmationEmail(newUser);
@@ -344,8 +349,8 @@ const authController = {
         });
       }
 
-      // Check if Stripe customer exists in local DB
-      if (!user.stripeCustomerId) {
+      // Check if Stripe customer exists in local DB (only if stripe is configured)
+      if (stripe && !user.stripeCustomerId) {
         // Create new Stripe customer
         const customer = await stripe.customers.create({
           name: `${user.firstName} ${user.lastName}`,
@@ -356,7 +361,7 @@ const authController = {
         await user.update({ stripeCustomerId: customer.id });
         // Refresh user data to get the updated stripeCustomerId
         await user.reload();
-      } else {
+      } else if (stripe && user.stripeCustomerId) {
         // Verify if customer exists on Stripe
         try {
           await stripe.customers.retrieve(user.stripeCustomerId);

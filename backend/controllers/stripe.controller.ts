@@ -4,10 +4,30 @@ import sequelize, { User } from "../models/index";
 import { AuthenticatedRequest } from "../types/user";
 import userController from "./user.controller";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+// Initialize Stripe only if API key is available
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
+  : null;
+
+// Helper function to check if Stripe is configured
+const isStripeConfigured = (): boolean => {
+  return stripe !== null && !!process.env.STRIPE_SECRET_KEY;
+};
+
+// Helper function to handle Stripe not configured
+const handleStripeNotConfigured = (res: Response) => {
+  return res.status(503).json({ 
+    error: "Payment service not configured",
+    message: "Stripe is not properly configured on this server" 
+  });
+};
 
 class StripeController {
   static async createCheckoutSession(req: Request, res: Response) {
+    if (!isStripeConfigured()) {
+      return handleStripeNotConfigured(res);
+    }
+
     const userId = (req as unknown as AuthenticatedRequest).user.id;
     const { priceId } = req.body;
 
@@ -20,7 +40,7 @@ class StripeController {
 
     if (customerId) {
       // Check if user already has an active subscription
-      const subscriptions = await stripe.subscriptions.list({
+      const subscriptions = await stripe!.subscriptions.list({
         customer: customerId,
         status: "active",
       });
@@ -33,7 +53,7 @@ class StripeController {
       }
     } else {
       // Create a new customer if one doesn't exist
-      const customer = await stripe.customers.create({
+      const customer = await stripe!.customers.create({
         email: user.email,
         name: user.firstName + " " + user.lastName,
       });
@@ -42,7 +62,7 @@ class StripeController {
     }
     try {
       // Get price details
-      const price = await stripe.prices.retrieve(priceId, {
+      const price = await stripe!.prices.retrieve(priceId, {
         expand: ["product"],
       });
 
@@ -55,7 +75,7 @@ class StripeController {
       const isRecurring = !!price.recurring;
 
       // Create checkout session
-      const session = await stripe.checkout.sessions.create({
+      const session = await stripe!.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
           {
@@ -88,7 +108,7 @@ class StripeController {
 
   static async getPlans(req: Request, res: Response) {
     try {
-      const stripePlans = await stripe.products.list({
+      const stripePlans = await stripe!.products.list({
         active: true,
         expand: ["data.default_price"],
       });
@@ -143,7 +163,7 @@ class StripeController {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      const subscription = await stripe.subscriptions.list({
+      const subscription = await stripe!.subscriptions.list({
         customer: user?.stripeCustomerId as string,
       });
 
@@ -161,7 +181,7 @@ class StripeController {
       const subscriptionId = req.body.subscriptionId;
       const userId = req.user?.id;
       // Get user's active subscription
-      const subscription = await stripe.subscriptions.cancel(subscriptionId);
+      const subscription = await stripe!.subscriptions.cancel(subscriptionId);
 
       const user = await User.findOne({ where: { id: userId as string } });
 
@@ -182,7 +202,7 @@ class StripeController {
       const { session_id } = req.params;
 
       // Retrieve the checkout session
-      const session = await stripe.checkout.sessions.retrieve(session_id, {
+      const session = await stripe!.checkout.sessions.retrieve(session_id, {
         expand: ["line_items", "payment_intent", "subscription"],
       });
 
@@ -200,7 +220,7 @@ class StripeController {
     try {
       const rawBody = req.body;
 
-      eventObject = stripe.webhooks.constructEvent(
+      eventObject = stripe!.webhooks.constructEvent(
         rawBody,
         signature as string,
         process.env.STRIPE_WEBHOOK_SECRET as string
@@ -293,7 +313,7 @@ class StripeController {
         return;
       }
 
-      const subscription = await stripe.subscriptions.retrieve(
+      const subscription = await stripe!.subscriptions.retrieve(
         subscriptionId as string,
         {
           expand: ["items.data.plan.product", "customer"],
