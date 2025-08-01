@@ -1,7 +1,7 @@
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 import { IsString } from "class-validator";
 
-export default function initTwilioSettingModel(sequelize: Sequelize) {
+export default function initTwilioSettingModel(sequelize: Sequelize): any {
   class TwilioSetting extends Model {
     @IsString()
     id!: number;

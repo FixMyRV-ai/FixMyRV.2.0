@@ -37,7 +37,7 @@ class UserController {
       }
 
       const userInstance = plainToClass(User, req.body);
-      const errors = await validate(userInstance);
+      const errors = await validate(userInstance as object);
       if (errors.length > 0) {
         res.status(400).json({ error: errors[0].constraints });
         return;

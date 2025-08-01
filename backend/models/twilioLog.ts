@@ -1,4 +1,4 @@
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 
 export interface TwilioLogAttributes {
   id?: number;
@@ -42,7 +42,7 @@ class TwilioLog extends Model<TwilioLogAttributes, TwilioLogCreationAttributes> 
   public readonly updatedAt!: Date;
 }
 
-const initTwilioLogModel = (sequelize: Sequelize): typeof TwilioLog => {
+const initTwilioLogModel = (sequelize: Sequelize): any => {
   TwilioLog.init(
     {
       id: {

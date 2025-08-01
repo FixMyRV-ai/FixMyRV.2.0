@@ -1,11 +1,11 @@
-import { DataTypes, Model, Sequelize, QueryTypes } from "sequelize";
+import { DataTypes, Model, Sequelize, QueryTypes, ModelCtor } from "sequelize";
 import { IsNumber, IsString, IsEnum } from "class-validator";
 
 interface MaxIdResult {
   max_id: number | null;
 }
 
-export default function initSourceContentmodel(sequelize: Sequelize) {
+export default function initSourceContentmodel(sequelize: Sequelize): any {
   class SourceContent extends Model {
     @IsNumber()
     id!: number;

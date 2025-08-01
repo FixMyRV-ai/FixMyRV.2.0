@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { Sequelize } from "sequelize";
+import { ModelCtor, Model } from "sequelize";
 import initUserModel from "./user";
 import initChatModel from "./chat";
 import initMessageModel from "./message";
@@ -24,13 +25,13 @@ const sequelize = new Sequelize(
   }
 );
 
-const User = initUserModel(sequelize);
-const Chat = initChatModel(sequelize);
-const Message = initMessageModel(sequelize);
-const Setting = initSettingmodel(sequelize);
-const SourceContent = initSourceContentmodel(sequelize);
-const TwilioSetting = initTwilioSettingModel(sequelize);
-const TwilioLog = initTwilioLogModel(sequelize);
+const User: any = initUserModel(sequelize);
+const Chat: any = initChatModel(sequelize);
+const Message: any = initMessageModel(sequelize);
+const Setting: any = initSettingmodel(sequelize);
+const SourceContent: any = initSourceContentmodel(sequelize);
+const TwilioSetting: any = initTwilioSettingModel(sequelize);
+const TwilioLog: any = initTwilioLogModel(sequelize);
 
 User.hasMany(Chat, {
   foreignKey: "userId",

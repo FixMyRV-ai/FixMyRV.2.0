@@ -1,7 +1,7 @@
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 import { IsNumber, IsString } from "class-validator";
 
-export default function initSettingmodel(sequelize: Sequelize) {
+export default function initSettingmodel(sequelize: Sequelize): any {
   class Setting extends Model {
     @IsNumber()
     id!: number;

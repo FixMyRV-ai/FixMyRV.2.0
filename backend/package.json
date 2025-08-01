@@ -9,7 +9,7 @@
     "build": "tsc",
     "build:prod": "tsc -d && npm run build",
     "build:declarations": "tsc -d",
-    "clean": "rm -rf dist",
+    "clean": "rimraf dist",
     "prebuild": "npm run clean"
   },
   "keywords": [],
@@ -73,6 +73,7 @@
     "@types/pg": "^8.11.11",
     "@types/puppeteer": "^5.4.7",
     "@types/stripe": "^8.0.416",
+    "rimraf": "^6.0.1",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.2"

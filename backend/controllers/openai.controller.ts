@@ -60,7 +60,7 @@ class OpenaiController {
       });
 
       // Format chat history for context with proper role attribution
-      const formattedHistory = chatHistory.map((msg) => ({
+      const formattedHistory = chatHistory.map((msg: any) => ({
         role: msg.is_bot ? "assistant" : "user",
         content: msg.content,
       }));

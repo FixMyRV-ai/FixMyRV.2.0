@@ -1,11 +1,11 @@
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 import {
   IsNumber,
   IsString,
   Length,
 } from "class-validator";
 
-export default function initChatModel(sequelize: Sequelize) {
+export default function initChatModel(sequelize: Sequelize): any {
   class Chat extends Model {
     @IsNumber()
     id!: number;

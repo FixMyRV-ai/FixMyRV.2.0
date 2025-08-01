@@ -5,8 +5,8 @@ import {
   IsNumber,
   IsString,
 } from "class-validator";
-import { DataTypes, Model, Sequelize } from "sequelize";
-export default function initMessageModel(sequelize: Sequelize) {
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
+export default function initMessageModel(sequelize: Sequelize): any {
   class Message extends Model {
     @IsNumber()
     id!: number;

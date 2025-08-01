@@ -11,9 +11,9 @@ import {
   Length,
   validate,
 } from "class-validator";
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 
-export default function initUserModel(sequelize: Sequelize) {
+export default function initUserModel(sequelize: Sequelize): any {
   class User extends Model {
     @IsString()
     @Length(1, 255)

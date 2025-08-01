@@ -872,7 +872,7 @@ class ContentController {
         attributes: ["googleDriveFileId"],
       });
       const uploadedFileIds = new Set(
-        uploadedFiles.map((f) => f.googleDriveFileId)
+        uploadedFiles.map((f: any) => f.googleDriveFileId)
       );
 
       const processedItems = response.data.files?.map((item) => {
