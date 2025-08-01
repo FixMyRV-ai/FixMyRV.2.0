@@ -13,7 +13,7 @@ import Helpers from "@/config/helpers";
 import settingService from "@/services/admin/setting.service";
 import twilioService, { TwilioLogEntry } from "@/services/admin/twilio.service";
 import { Settings, Model, TwilioSettings, ErrorResponse } from "@/types/setting";
-import { Loader2, FileText, Settings as SettingsIcon } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AxiosError } from "axios";
 
@@ -34,6 +34,7 @@ const Setting = () => {
   const [loading, setLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [twilioUpdateLoading, setTwilioUpdateLoading] = useState(false);
+  // @ts-ignore - Preserved for future toggle functionality
   const [showTwilioLogs, setShowTwilioLogs] = useState(true); // Default to logs but preserve toggle functionality
   const [twilioLogs, setTwilioLogs] = useState<TwilioLogEntry[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
