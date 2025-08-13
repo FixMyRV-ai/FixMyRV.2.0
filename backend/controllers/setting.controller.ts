@@ -8,14 +8,27 @@ export class SettingController {
       if (!result) {
         return res.status(404).json({ message: "API configuration not found" });
       }
-      const client = new OpenAI({
-        apiKey: result.key,
-      });
-     const models = await client.models.list();
+      
+      // Check if API key looks valid before trying to fetch models
+      const isValidApiKey = result.key && result.key.startsWith('sk-') && result.key.length > 20 && !result.key.includes('your-openai-api-key-here');
+      let models: any[] = [];
+      
+      if (isValidApiKey) {
+        try {
+          const client = new OpenAI({
+            apiKey: result.key,
+          });
+          const modelsList = await client.models.list();
+          models = modelsList.data;
+        } catch (apiError: any) {
+          console.warn('OpenAI API error (using sample key):', apiError.message);
+          // Return settings without models if API key is invalid
+        }
+      }
 
       res.status(200).json({
-        data:result,
-        models:models.data,
+        data: result,
+        models: models,
       });
     } catch (error: any) {
       res.status(500).json({ message: error.message || "Error reading resource" });

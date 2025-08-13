@@ -13,7 +13,7 @@ import Helpers from "@/config/helpers";
 import settingService from "@/services/admin/setting.service";
 import twilioService, { TwilioLogEntry } from "@/services/admin/twilio.service";
 import { Settings, Model, TwilioSettings, ErrorResponse } from "@/types/setting";
-import { Loader2 } from "lucide-react";
+import { Loader2, Settings as SettingsIcon, FileText } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AxiosError } from "axios";
 
@@ -35,7 +35,7 @@ const Setting = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [twilioUpdateLoading, setTwilioUpdateLoading] = useState(false);
   // @ts-ignore - Preserved for future toggle functionality
-  const [showTwilioLogs, setShowTwilioLogs] = useState(true); // Default to logs but preserve toggle functionality
+  const [showTwilioLogs, setShowTwilioLogs] = useState(false); // Default to settings for easier API access
   const [twilioLogs, setTwilioLogs] = useState<TwilioLogEntry[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
 
@@ -194,7 +194,6 @@ const Setting = () => {
             <CardTitle className="text-card-foreground">
               {showTwilioLogs ? "Twilio Logs" : "Twilio Settings"}
             </CardTitle>
-            {/* Toggle button temporarily hidden - all functionality preserved for future re-enabling
             <Button
               variant="ghost"
               size="sm"
@@ -208,7 +207,6 @@ const Setting = () => {
                 <FileText className="h-4 w-4" />
               )}
             </Button>
-            */}
           </div>
         </CardHeader>
         <CardContent>
