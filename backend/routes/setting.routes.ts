@@ -13,5 +13,6 @@ settingRouter.get("/", SettingController.read as RequestHandler);
 // Twilio Settings routes
 settingRouter.post("/twilio", SettingController.updateTwilioSettings as RequestHandler);
 settingRouter.get("/twilio", SettingController.readTwilioSettings as RequestHandler);
+settingRouter.post("/twilio/optin-message", SettingController.updateTwilioOptinMessage as RequestHandler);
 
 export default settingRouter;

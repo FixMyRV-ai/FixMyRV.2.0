@@ -116,4 +116,41 @@ export class SettingController {
         .json({ message: "Error updating or creating Twilio settings", error });
     }
   };
+
+  static updateTwilioOptinMessage = async (req: any, res: any) => {
+    try {
+      const { optinMessage } = req.body;
+
+      // Validate message length (Twilio recommended 320 characters)
+      if (optinMessage && optinMessage.length > 320) {
+        return res.status(400).json({ 
+          message: "Opt-In message must be 320 characters or less" 
+        });
+      }
+
+      // Check if the Twilio settings row exists
+      const twilioExist = await TwilioSetting.findOne();
+      let result;
+
+      if (twilioExist) {
+        // Update the existing row
+        twilioExist.optinMessage = optinMessage;
+        result = await twilioExist.save();
+      } else {
+        // Create a new row with default values and opt-in message
+        result = await TwilioSetting.create({
+          accountSid: '',
+          authToken: '',
+          phoneNumber: '',
+          optinMessage,
+        });
+      }
+
+      res.status(200).json({ result });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error updating Twilio Opt-In message", error });
+    }
+  };
 }

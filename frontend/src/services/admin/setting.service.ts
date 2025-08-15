@@ -59,6 +59,19 @@ class SettingServices extends BaseService {
       throw new Error(errorMessage);
     }
   }
+
+  async updateTwilioOptinMessage(optinMessage: string) {
+    try {
+      await this.post("/twilio/optin-message", { optinMessage });
+    } catch (error: unknown) {
+      console.error("Error updating Twilio Opt-In message:", error);
+      const errorMessage =
+        (error as AxiosError<ErrorResponse>)?.response?.data?.message ||
+        (error as AxiosError<ErrorResponse>)?.response?.data?.error ||
+        "Failed to update Twilio Opt-In message";
+      throw new Error(errorMessage);
+    }
+  }
 }
 
 export default new SettingServices();

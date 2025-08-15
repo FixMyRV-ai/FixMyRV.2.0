@@ -29,11 +29,13 @@ const Setting = () => {
     accountSid: "",
     authToken: "",
     phoneNumber: "",
+    optinMessage: "",
   });
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [twilioUpdateLoading, setTwilioUpdateLoading] = useState(false);
+  const [optinMessageUpdateLoading, setOptinMessageUpdateLoading] = useState(false);
   // @ts-ignore - Preserved for future toggle functionality
   const [showTwilioLogs, setShowTwilioLogs] = useState(false); // Default to settings for easier API access
   const [twilioLogs, setTwilioLogs] = useState<TwilioLogEntry[]>([]);
@@ -126,6 +128,25 @@ const Setting = () => {
       Helpers.toast("error", errorMessage);
     } finally {
       setTwilioUpdateLoading(false);
+    }
+  };
+
+  const handleOptinMessageUpdate = async () => {
+    try {
+      setOptinMessageUpdateLoading(true);
+      await settingService.updateTwilioOptinMessage(twilioSettings.optinMessage);
+      Helpers.toast("success", "Twilio Opt-In message updated successfully");
+      fetchTwilioSettings();
+    } catch (error: unknown) {
+      console.error("Failed to update Twilio Opt-In message:", error);
+      const errorMessage =
+        (error as AxiosError<ErrorResponse>)?.response?.data?.message ||
+        (error as AxiosError<ErrorResponse>)?.response?.data?.error ||
+        (error as Error)?.message ||
+        "Failed to update Twilio Opt-In message";
+      Helpers.toast("error", errorMessage);
+    } finally {
+      setOptinMessageUpdateLoading(false);
     }
   };
 
@@ -323,6 +344,46 @@ const Setting = () => {
             <Button onClick={handleTwilioUpdate} disabled={loading || twilioUpdateLoading}>
               {twilioUpdateLoading ? "Updating..." : "Update Twilio Settings"}
             </Button>
+
+            {/* Opt-In Message Section */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <div>
+                <label htmlFor="twilioOptinMessage" className="block text-sm font-medium mb-2">
+                  Opt-In Message
+                </label>
+                <Textarea
+                  id="twilioOptinMessage"
+                  rows={7}
+                  value={twilioSettings.optinMessage}
+                  onChange={(e) => {
+                    const message = e.target.value;
+                    if (message.length <= 320) {
+                      handleTwilioChange("optinMessage", message);
+                    }
+                  }}
+                  placeholder="Enter your SMS Opt-In message..."
+                  disabled={loading}
+                  className="resize-none"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm text-muted-foreground">
+                    {twilioSettings.optinMessage.length}/320 characters
+                  </span>
+                  {twilioSettings.optinMessage.length > 320 && (
+                    <span className="text-sm text-destructive">
+                      Message too long
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Button 
+                onClick={handleOptinMessageUpdate} 
+                disabled={loading || optinMessageUpdateLoading || twilioSettings.optinMessage.length > 320}
+                className="mt-4"
+              >
+                {optinMessageUpdateLoading ? "Updating..." : "Update Opt-In Message"}
+              </Button>
+            </div>
             </div>
           )}
         </CardContent>

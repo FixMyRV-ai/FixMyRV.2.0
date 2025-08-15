@@ -28,7 +28,8 @@ const insertTwilioSettings = async () => {
     const twilioData = {
       accountSid: process.env.TWILIO_ACCOUNT_SID || "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
       authToken: process.env.TWILIO_AUTH_TOKEN || "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", 
-      phoneNumber: process.env.TWILIO_PHONE_NUMBER || "+1234567890"
+      phoneNumber: process.env.TWILIO_PHONE_NUMBER || "+1234567890",
+      optinMessage: 'Your Phone Number has been associated with a FixMyRV.ai service account. To confirm and Opt-In, please respond "YES" to this message. At any moment you can stop all messages from us, by texting back "STOP".'
     };
 
     // Validate the data
@@ -61,6 +62,7 @@ const insertTwilioSettings = async () => {
     console.log(`   Account SID: ${settings.accountSid}`);
     console.log(`   Phone Number: ${settings.phoneNumber}`);
     console.log(`   Auth Token: ${settings.authToken ? '***configured***' : 'NOT SET'}`);
+    console.log(`   Opt-In Message: ${settings.optinMessage ? '***configured***' : 'NOT SET'}`);
     console.log('');
     console.log('🎯 Next Steps:');
     console.log('1. Update backend/.env with your real Twilio credentials');

@@ -14,6 +14,9 @@ export default function initTwilioSettingModel(sequelize: Sequelize): any {
 
     @IsString()
     phoneNumber!: string;
+
+    @IsString()
+    optinMessage!: string;
   }
 
   TwilioSetting.init(
@@ -34,6 +37,11 @@ export default function initTwilioSettingModel(sequelize: Sequelize): any {
       phoneNumber: {
         type: DataTypes.TEXT,
         allowNull: true,
+      },
+      optinMessage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        defaultValue: 'Your Phone Number has been associated with a FixMyRV.ai service account. To confirm and Opt-In, please respond "YES" to this message. At any moment you can stop all messages from us, by texting back "STOP".',
       },
     },
     {

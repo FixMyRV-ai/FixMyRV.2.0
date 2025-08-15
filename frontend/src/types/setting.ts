@@ -10,6 +10,7 @@ export interface TwilioSettings {
   accountSid: string;
   authToken: string;
   phoneNumber: string;
+  optinMessage: string;
 }
 
 export interface Model {
