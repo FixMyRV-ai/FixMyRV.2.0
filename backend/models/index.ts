@@ -8,6 +8,8 @@ import initSettingmodel from "./setting";
 import initSourceContentmodel from "./sourceContent";
 import initTwilioSettingModel from "./twilioSetting";
 import initTwilioLogModel from "./twilioLog";
+import initOrganizationModel from "./organization";
+import initOrganizationUserModel from "./organizationUser";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ const Setting: any = initSettingmodel(sequelize);
 const SourceContent: any = initSourceContentmodel(sequelize);
 const TwilioSetting: any = initTwilioSettingModel(sequelize);
 const TwilioLog: any = initTwilioLogModel(sequelize);
+const Organization: any = initOrganizationModel(sequelize);
+const OrganizationUser: any = initOrganizationUserModel(sequelize);
 
 User.hasMany(Chat, {
   foreignKey: "userId",
@@ -54,6 +58,28 @@ Message.belongsTo(Chat, {
   as: "chat",
 });
 
+// Organization relationships
+Organization.hasMany(User, {
+  foreignKey: "organizationId",
+  as: "users",
+});
+
+User.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
+// OrganizationUser relationships
+Organization.hasMany(OrganizationUser, {
+  foreignKey: "organizationId",
+  as: "organizationUsers",
+});
+
+OrganizationUser.belongsTo(Organization, {
+  foreignKey: "organizationId",
+  as: "organization",
+});
+
 export {
   sequelize,
   User,
@@ -63,5 +89,7 @@ export {
   SourceContent,
   TwilioSetting,
   TwilioLog,
+  Organization,
+  OrganizationUser,
 };
 export default sequelize;

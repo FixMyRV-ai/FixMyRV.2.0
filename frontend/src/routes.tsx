@@ -10,6 +10,7 @@ import ForgotPassword from "./pages/auth/forgotPassword";
 import Dashboard from "./pages/admin/dasboard";
 import AdminLayout from "./pages/admin/layout";
 import Users from "./pages/admin/users";
+import Organizations from "./pages/admin/organizations";
 import Transactions from "./pages/admin/transactions";
 import TransactionStatsPage from "./pages/admin/transactions/stats";
 import Setting from "./pages/admin/setting";
@@ -127,6 +128,10 @@ const router = createBrowserRouter([
       {
         path: "users",
         element: <Users />,
+      },
+      {
+        path: "organizations",
+        element: <Organizations />,
       },
       {
         path: "transactions",

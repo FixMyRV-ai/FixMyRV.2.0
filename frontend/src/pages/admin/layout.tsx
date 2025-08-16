@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Package,
   UserRound,
+  Building2,
 } from "lucide-react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import authSlice from "@/store/slices/authSlice";
@@ -41,6 +42,12 @@ const Layout = () => {
       active: false,
     },
     { icon: Users, label: "Users", path: "/admin/users", active: false },
+    {
+      icon: Building2,
+      label: "Organizations",
+      path: "/admin/organizations",
+      active: false,
+    },
     {
       icon: CreditCard,
       label: "Transactions",

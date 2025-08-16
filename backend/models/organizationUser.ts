@@ -5,16 +5,24 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Length,
   validate,
 } from "class-validator";
-import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
+import { DataTypes, Model, Sequelize } from "sequelize";
 
-export default function initUserModel(sequelize: Sequelize): any {
-  class User extends Model {
+export default function initOrganizationUserModel(sequelize: Sequelize): any {
+  class OrganizationUser extends Model {
+    @IsOptional()
+    @IsNumber()
+    id?: number;
+
+    @IsOptional()
+    organizationId?: number;
+
     @IsString()
     @Length(1, 255)
     firstName!: string;
@@ -30,8 +38,8 @@ export default function initUserModel(sequelize: Sequelize): any {
     @Length(6, 100)
     password!: string;
 
-    @IsEnum(["user", "admin"])
-    role!: "user" | "admin";
+    @IsEnum(["user", "admin", "manager"])
+    role!: "user" | "admin" | "manager";
 
     @IsBoolean()
     @IsOptional()
@@ -62,28 +70,30 @@ export default function initUserModel(sequelize: Sequelize): any {
     profileImage?: string;
 
     @IsString()
-    @IsOptional()
-    stripeCustomerId?: string;
-
-    @IsNumber()
-    credits!: number;
-
-    @IsEnum(["subscription", "payment"])
-    plan_type!: "subscription" | "payment";
-
-    @IsEnum(["normal", "pro"])
-    type!: "normal" | "pro";
+    @IsNotEmpty()
+    phone!: string;
 
     @IsString()
     @IsOptional()
-    sessionId?: string | null;
+    department?: string;
 
-    @IsNumber()
+    @IsString()
     @IsOptional()
-    organizationId?: number;
+    jobTitle?: string;
+
+    @IsDate()
+    @IsOptional()
+    hireDate?: Date;
+
+    @IsEnum(["active", "inactive", "suspended", "new_user", "invited"])
+    status!: "active" | "inactive" | "suspended" | "new_user" | "invited";
+
+    @IsString()
+    @IsOptional()
+    notes?: string;
 
     // Add a hook to hash the password before saving
-    static async hashPassword(user: User) {
+    static async hashPassword(user: OrganizationUser) {
       if (user.changed("password")) {
         user.password = await bcrypt.hash(user.password, 10);
       }
@@ -95,8 +105,8 @@ export default function initUserModel(sequelize: Sequelize): any {
     }
 
     // Custom validation logic
-    static async validateUser(userData: Partial<User>) {
-      const userInstance = plainToClass(User, userData);
+    static async validateOrganizationUser(userData: Partial<OrganizationUser>) {
+      const userInstance = plainToClass(OrganizationUser, userData);
       const errors = await validate(userInstance);
       if (errors.length > 0) {
         throw new Error(
@@ -104,14 +114,29 @@ export default function initUserModel(sequelize: Sequelize): any {
         );
       }
     }
+
+    // Get full name
+    get fullName() {
+      return `${this.firstName} ${this.lastName}`;
+    }
   }
 
-  User.init(
+  OrganizationUser.init(
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+      },
+      organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'organizations',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       firstName: {
         type: DataTypes.STRING,
@@ -130,7 +155,6 @@ export default function initUserModel(sequelize: Sequelize): any {
       email: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
           isEmail: true,
         },
@@ -143,19 +167,11 @@ export default function initUserModel(sequelize: Sequelize): any {
         },
       },
       role: {
-        type: DataTypes.ENUM("user", "admin"),
+        type: DataTypes.ENUM("user", "admin", "manager"),
         allowNull: false,
         defaultValue: "user",
         validate: {
-          isIn: [["user", "admin"]],
-        },
-      },
-      type: {
-        type: DataTypes.ENUM("pro", "normal"),
-        allowNull: false,
-        defaultValue: "normal",
-        validate: {
-          isIn: [["pro", "normal"]],
+          isIn: [["user", "admin", "manager"]],
         },
       },
       verified: {
@@ -186,58 +202,82 @@ export default function initUserModel(sequelize: Sequelize): any {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      stripeCustomerId: {
+      phone: {
         type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-      },
-      credits: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
         allowNull: false,
         validate: {
-          min: 0,
+          len: [1, 20],
+          notEmpty: true,
         },
       },
-      plan_type: {
-        type: DataTypes.ENUM("subscription", "payment"),
-        allowNull: true,
-        defaultValue: "payment",
-        validate: {
-          isIn: [["subscription", "payment"]],
-        },
-      },
-      sessionId: {
+      department: {
         type: DataTypes.STRING,
         allowNull: true,
-      },
-      organizationId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-          model: 'organizations',
-          key: 'id',
+        validate: {
+          len: [0, 100],
         },
+      },
+      jobTitle: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          len: [0, 100],
+        },
+      },
+      hireDate: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      status: {
+        type: DataTypes.ENUM("active", "inactive", "suspended", "new_user", "invited"),
+        allowNull: false,
+        defaultValue: "new_user",
+        validate: {
+          isIn: [["active", "inactive", "suspended", "new_user", "invited"]],
+        },
+      },
+      notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
     },
     {
       sequelize,
-      modelName: "User",
-      tableName: "users",
+      modelName: "OrganizationUser",
+      tableName: "organization_users",
       hooks: {
-        beforeSave: User.hashPassword,
+        beforeSave: OrganizationUser.hashPassword,
       },
       paranoid: true,
+      indexes: [
+        {
+          unique: true,
+          fields: ['organizationId', 'email'],
+          name: 'organization_users_org_email_unique'
+        },
+        {
+          fields: ['organizationId'],
+          name: 'organization_users_organization_id_index'
+        },
+        {
+          fields: ['email'],
+          name: 'organization_users_email_index'
+        },
+        {
+          fields: ['status'],
+          name: 'organization_users_status_index'
+        }
+      ]
     }
   );
 
-  User.addHook("beforeCreate", async (user: User) => {
-    await User.validateUser(user);
+  OrganizationUser.addHook("beforeCreate", async (user: OrganizationUser) => {
+    await OrganizationUser.validateOrganizationUser(user);
   });
 
-  User.addHook("beforeUpdate", async (user: User) => {
-    await User.validateUser(user);
+  OrganizationUser.addHook("beforeUpdate", async (user: OrganizationUser) => {
+    await OrganizationUser.validateOrganizationUser(user);
   });
 
-  return User;
+  return OrganizationUser;
 }

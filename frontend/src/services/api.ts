@@ -37,4 +37,24 @@ api.interceptors.request.use(
   }
 );
 
+// Response Interceptor for handling session expiration
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle 401 Unauthorized (session expired)
+    if (error.response?.status === 401) {
+      // Clear user data
+      localStorage.removeItem("user");
+      
+      // Redirect to login page
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
