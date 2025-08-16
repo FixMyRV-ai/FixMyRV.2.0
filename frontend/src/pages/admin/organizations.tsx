@@ -50,9 +50,7 @@ import {
   ChevronDown,
   ChevronRight,
   UserPlus,
-  UserMinus,
-  MessageSquare,
-  Phone
+  MessageSquare
 } from "lucide-react";
 
 const Organizations = () => {
@@ -256,21 +254,10 @@ const Organizations = () => {
     }
   };
 
-  const handleRemoveUserFromOrganization = async (orgId: number, userId: number) => {
-    try {
-      await organizationUserService.deleteOrganizationUser(orgId, userId);
-      Helpers.toast("success", "User removed successfully");
-      fetchOrganizationUsers(orgId);
-    } catch (error: any) {
-      console.error("Error removing user from organization:", error);
-      Helpers.toast("error", error.response?.data?.error || "Failed to remove user");
-    }
-  };
-
   // New handler functions for user actions
   const handleResendSMS = async (user: OrganizationUserFull, organizationId: number) => {
     try {
-      const response = await organizationUserService.sendSMSInvite(organizationId, user.id);
+      await organizationUserService.sendSMSInvite(organizationId, user.id);
       Helpers.toast("success", `SMS invite sent to ${user.firstName} ${user.lastName} at ${user.phone}`);
       
       // Refresh the user list to show updated status
