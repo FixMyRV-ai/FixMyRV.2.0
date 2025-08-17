@@ -12,7 +12,7 @@ export default defineConfig({
   },
   define: {
     // Suppress React DevTools warnings in development and production
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: "({ isDisabled: true })",
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: JSON.stringify({ isDisabled: true }),
     // Suppress other common development warnings
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
