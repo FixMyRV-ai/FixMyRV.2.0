@@ -62,7 +62,6 @@ const AnalyticsCard = ({
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -81,10 +80,6 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
   if (loading) {
     return (
       <div className="w-full h-full flex justify-center items-center">
@@ -94,15 +89,7 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto">
-      {/* Mobile Overlay when Sidebar is Open */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 md:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
-
+    <main className="flex-1 overflow-y-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl text-foreground font-bold">Dashboard</h2>
       </div>

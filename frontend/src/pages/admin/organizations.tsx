@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -256,15 +256,47 @@ const Organizations = () => {
 
   // New handler functions for user actions
   const handleResendSMS = async (user: OrganizationUserFull, organizationId: number) => {
+    console.log('🚀 SMS BUTTON CLICKED!');
+    console.log('📱 SMS Request Details:', {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        status: user.status
+      },
+      organizationId: organizationId,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
+      console.log('📡 Starting SMS API call...');
+      console.log('🔗 API Endpoint:', `/organizations/${organizationId}/users/${user.id}/send-sms`);
+      
       await organizationUserService.sendSMSInvite(organizationId, user.id);
+      
+      console.log('✅ SMS API call completed successfully!');
+      console.log('🎉 Showing success toast...');
       Helpers.toast("success", `SMS invite sent to ${user.firstName} ${user.lastName} at ${user.phone}`);
       
+      console.log('🔄 Refreshing organization users list...');
       // Refresh the user list to show updated status
       await fetchOrganizationUsers(organizationId);
+      console.log('✅ Organization users list refreshed!');
+      
     } catch (error: any) {
-      console.error("Error sending SMS invite:", error);
+      console.error("❌ ERROR SENDING SMS INVITE:", error);
+      console.error("🔍 Error Details:", {
+        message: error.message,
+        response: error.response,
+        responseData: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
       const errorMessage = error.response?.data?.error || error.response?.data?.details || "Failed to send SMS invite";
+      console.log('🚨 Showing error toast:', errorMessage);
       Helpers.toast("error", errorMessage);
     }
   };
@@ -335,8 +367,8 @@ const Organizations = () => {
             </TableHeader>
             <TableBody>
               {organizations.map((organization) => (
-                <>
-                  <TableRow key={organization.id}>
+                <React.Fragment key={organization.id}>
+                  <TableRow>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -495,7 +527,7 @@ const Organizations = () => {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

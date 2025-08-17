@@ -4,8 +4,19 @@ import ReactDOM from "react-dom/client";
 class Helpers {
   static localhost: string = "http://localhost:3000";
   static server: string = "https://app.fixmyrv.ai/backend";
+  
   // For local development, use localhost. For production, use server
-  static basePath: string = import.meta.env.DEV ? Helpers.localhost : Helpers.server;
+  // Add fallback to prevent undefined errors
+  static basePath: string = (() => {
+    try {
+      return import.meta.env?.DEV ? Helpers.localhost : Helpers.server;
+    } catch (error) {
+      // Fallback to localhost for development
+      console.warn("Environment detection failed, defaulting to localhost");
+      return Helpers.localhost;
+    }
+  })();
+  
   static apiUrl: string = `${Helpers.basePath}/api/v1`;
 
   static authUser = (): Record<string, unknown> => {

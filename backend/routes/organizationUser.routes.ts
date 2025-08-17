@@ -31,6 +31,9 @@ router.patch("/organizations/:organizationId/users/:userId/status", organization
 // Delete a user from an organization
 router.delete("/organizations/:organizationId/users/:userId", organizationUserController.deleteOrganizationUser);
 
+// Send SMS invite to user
+router.post("/organizations/:organizationId/users/:userId/send-sms", organizationUserController.sendSMSInvite);
+
 // Bulk operations
 router.put("/organizations/:organizationId/users/bulk", organizationUserController.bulkUpdateUsers);
 router.delete("/organizations/:organizationId/users/bulk", organizationUserController.bulkDeleteUsers);

@@ -479,19 +479,13 @@ class OrganizationUserController {
       const { organizationId, userId } = req.params;
       console.log('SMS Invite Request - Organization ID:', organizationId, 'User ID:', userId);
 
-      // Find the user
+      // Find the user (without organization to avoid circular reference issues)
       const user = await OrganizationUser.findOne({
         where: { 
           id: userId,
           organizationId: organizationId
-        },
-        include: [
-          {
-            model: Organization,
-            as: 'organization',
-            attributes: ['id', 'name']
-          }
-        ]
+        }
+        // Note: Removed include to avoid class-transformer circular reference issues
       });
 
       if (!user) {
@@ -518,6 +512,11 @@ class OrganizationUserController {
       // Send SMS
       try {
         console.log('Attempting to send SMS to:', user.phone);
+        
+        // Update user status to 'invited' BEFORE sending SMS to avoid serialization issues
+        await user.update({ status: 'invited' });
+        console.log('User status updated to invited');
+        
         const message = await client.messages.create({
           body: twilioSettings.optinMessage || 'Your Phone Number has been associated with a FixMyRV.ai service account. To confirm and Opt-In, please respond "YES" to this message. At any moment you can stop all messages from us, by texting back "STOP".',
           from: twilioSettings.phoneNumber,
@@ -526,39 +525,27 @@ class OrganizationUserController {
 
         console.log('SMS sent successfully - SID:', message.sid, 'Status:', message.status);
 
-        // Update user status to 'invited'
-        await user.update({ status: 'invited' });
-
-        // Create a clean user response object without password
-        const userResponse = {
-          id: user.id,
-          organizationId: user.organizationId,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          role: user.role,
-          verified: user.verified,
-          phone: user.phone,
-          department: user.department,
-          jobTitle: user.jobTitle,
-          hireDate: user.hireDate,
-          status: 'invited',
-          notes: user.notes,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-          organization: user.organization
-        };
-
+        // Send simple response immediately to avoid any serialization issues
         res.json({ 
           success: true,
           message: 'SMS invite sent successfully',
-          user: userResponse,
+          user: {
+            id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phone: user.phone,
+            status: 'invited', // We know it's invited because we just updated it
+            organizationId: user.organizationId
+          },
           sms: {
             sid: message.sid,
             status: message.status,
             to: user.phone
           }
         });
+        return; // Important: exit here to avoid any further processing
+        
       } catch (twilioError: any) {
         console.error('Twilio SMS Error:', twilioError);
         res.status(500).json({ 

@@ -118,7 +118,32 @@ class OrganizationUserService extends BaseService {
     user: OrganizationUserCreateResponse;
     sms: { sid: string; status: string; to: string; } 
   }> {
-    return await this.post(`/organizations/${organizationId}/users/${userId}/send-sms`, {});
+    const endpoint = `/organizations/${organizationId}/users/${userId}/send-sms`;
+    console.log('📡 SERVICE: SMS API call starting...');
+    console.log('🔗 SERVICE: Full endpoint:', endpoint);
+    console.log('📦 SERVICE: Request payload:', {});
+    
+    try {
+      const result = await this.post(endpoint, {}) as { 
+        success: boolean; 
+        message: string; 
+        user: OrganizationUserCreateResponse;
+        sms: { sid: string; status: string; to: string; } 
+      };
+      console.log('✅ SERVICE: SMS API call successful!');
+      console.log('📥 SERVICE: Response data:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ SERVICE: SMS API call failed!');
+      console.error('🚨 SERVICE: Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+      throw error;
+    }
   }
 
   // Export users data
