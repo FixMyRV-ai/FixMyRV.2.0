@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
-import "./vite-hmr-fix";  // Import WebSocket error suppression
+// Removed problematic vite-hmr-fix import that was causing Vite to hang
 
 // Suppress common third-party console errors
 const originalError = console.error;
