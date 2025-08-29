@@ -14,6 +14,7 @@ import {
   Package,
   UserRound,
   Building2,
+  MessageSquare,
 } from "lucide-react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import authSlice from "@/store/slices/authSlice";
@@ -46,6 +47,12 @@ const Layout = () => {
       icon: Building2,
       label: "Organizations",
       path: "/admin/organizations",
+      active: false,
+    },
+    {
+      icon: MessageSquare,
+      label: "SMS Conversations",
+      path: "/admin/sms-conversations",
       active: false,
     },
     {

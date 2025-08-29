@@ -1,5 +1,6 @@
 import { Router } from "express";
 import adminController from "../controllers/admin.controller";
+import adminChatController from "../controllers/admin-chat.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 
 const router = Router();
@@ -9,5 +10,6 @@ router.use(authMiddleware);
 
 router.get("/dashboard", adminController.getDashboard);
 router.get("/users", adminController.getUsers);
+router.get("/sms-chats", adminChatController.getSMSChats);
 
 export default router;

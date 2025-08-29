@@ -11,6 +11,7 @@ import Dashboard from "./pages/admin/dasboard";
 import AdminLayout from "./pages/admin/layout";
 import Users from "./pages/admin/users";
 import Organizations from "./pages/admin/organizations";
+import SMSConversations from "./pages/admin/sms-conversations";
 import Transactions from "./pages/admin/transactions";
 import TransactionStatsPage from "./pages/admin/transactions/stats";
 import Setting from "./pages/admin/setting";
@@ -132,6 +133,10 @@ const router = createBrowserRouter([
       {
         path: "organizations",
         element: <Organizations />,
+      },
+      {
+        path: "sms-conversations",
+        element: <SMSConversations />,
       },
       {
         path: "transactions",

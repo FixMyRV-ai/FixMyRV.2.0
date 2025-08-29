@@ -3,6 +3,8 @@ import {
   IsNumber,
   IsString,
   Length,
+  IsEnum,
+  IsOptional,
 } from "class-validator";
 
 export default function initChatModel(sequelize: Sequelize): any {
@@ -18,6 +20,13 @@ export default function initChatModel(sequelize: Sequelize): any {
     @Length(1, 255)
     title!: string;
 
+    @IsEnum(["web", "sms"])
+    channel!: "web" | "sms";
+
+    @IsNumber()
+    @IsOptional()
+    organizationUserId?: number;
+
   }
 
   Chat.init(
@@ -29,15 +38,31 @@ export default function initChatModel(sequelize: Sequelize): any {
       },
       userId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true, // Make nullable since SMS uses organizationUserId
         references: {
           model: "users",
+          key: "id",
+        },
+      },
+      organizationUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: true, // Make nullable since web uses userId
+        references: {
+          model: "organization_users",
           key: "id",
         },
       },
       title: {
         type: DataTypes.TEXT,
         allowNull: false,
+      },
+      channel: {
+        type: DataTypes.ENUM("web", "sms"),
+        allowNull: false,
+        defaultValue: "web",
+        validate: {
+          isIn: [["web", "sms"]],
+        },
       }
     },
     {

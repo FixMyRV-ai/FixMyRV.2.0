@@ -312,12 +312,33 @@ export const receiveSmsWebhook = async (
       console.warn('⚠️  No Twilio signature provided (development mode)');
     }
 
-    // TODO: Add your SMS processing logic here
-    // Examples:
-    // - Save message to database
-    // - Trigger AI response
-    // - Forward to support team
-    // - Update user conversation history
+    // Process SMS through SMS Chat Service
+    console.log('🔄 Processing SMS message through chat service...');
+    let chatResult;
+    try {
+      const smsService = (await import('../services/sms-chat.service')).default;
+      
+      chatResult = await smsService.processIncomingSMS({
+        From,
+        To,
+        Body,
+        MessageSid
+      });
+      console.log('✅ SMS Service Result:', chatResult);
+      
+      if (chatResult.success && chatResult.responses) {
+        console.log('📤 Sending AI response via SMS...');
+        // Send response messages back via SMS
+        await smsService.sendSMSResponse(From, chatResult.responses);
+        console.log('✅ AI response sent successfully');
+      } else {
+        console.log('ℹ️ No response needed:', chatResult.message);
+      }
+    } catch (smsError) {
+      console.error('❌ SMS Service Error:', smsError);
+      // Continue with basic logging even if SMS service fails
+      chatResult = { success: false, message: 'SMS service failed' };
+    }
 
     const processingTime = Date.now() - startTime;
 

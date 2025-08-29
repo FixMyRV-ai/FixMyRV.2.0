@@ -48,6 +48,17 @@ Chat.belongsTo(User, {
   as: "user",
 });
 
+// OrganizationUser chat relationships for SMS
+OrganizationUser.hasMany(Chat, {
+  foreignKey: "organizationUserId",
+  as: "chats",
+});
+
+Chat.belongsTo(OrganizationUser, {
+  foreignKey: "organizationUserId",
+  as: "organizationUser",
+});
+
 Chat.hasMany(Message, {
   foreignKey: "chatId",
   as: "messages",

@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
+  IsOptional,
 } from "class-validator";
 import { DataTypes, Model, Sequelize, ModelCtor } from "sequelize";
 export default function initMessageModel(sequelize: Sequelize): any {
@@ -22,6 +23,18 @@ export default function initMessageModel(sequelize: Sequelize): any {
     @IsBoolean()
     @IsNotEmpty()
     is_bot!: boolean;
+
+    @IsString()
+    @IsOptional()
+    smsMessageSid?: string; // Twilio SMS message SID for tracking
+
+    @IsNumber()
+    @IsOptional()
+    smsBatchIndex?: number; // For tracking message parts in batched responses
+
+    @IsNumber()
+    @IsOptional()
+    smsBatchTotal?: number; // Total parts in batched response
 
     @IsDate()
     @IsNotEmpty()
@@ -53,6 +66,21 @@ export default function initMessageModel(sequelize: Sequelize): any {
       is_bot: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+      },
+      smsMessageSid: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "Twilio SMS message SID for tracking"
+      },
+      smsBatchIndex: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: "Index of message part in batched SMS response"
+      },
+      smsBatchTotal: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        comment: "Total number of parts in batched SMS response"
       }
     },
     {
