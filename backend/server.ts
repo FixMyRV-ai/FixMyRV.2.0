@@ -43,8 +43,16 @@ async function initDatabase(): Promise<void> {
   try {
     console.log("🔄 Starting model synchronization...");
     
+    // Check if we should force database sync (useful for production setup)
+    const forceSync = process.env.FORCE_DB_SYNC === 'true';
+    console.log(`📊 FORCE_DB_SYNC setting: ${forceSync}`);
+    
     // Force sync models to create missing tables
-    await sequelize.sync({ force: false, alter: true, logging: console.log });
+    await sequelize.sync({ 
+      force: forceSync, 
+      alter: !forceSync, // Only alter if not forcing
+      logging: console.log 
+    });
     console.log("✅ Database models synchronized successfully.");
     
     // Check if organizations table exists and has data
@@ -117,6 +125,69 @@ async function initDatabase(): Promise<void> {
       `);
       console.log("✅ Organization users table created/verified");
       
+      // Create chats table for SMS conversations
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS chats (
+          id SERIAL PRIMARY KEY,
+          channel VARCHAR(50) NOT NULL DEFAULT 'sms',
+          "organizationId" INTEGER REFERENCES organizations(id),
+          "customerPhone" VARCHAR(20) NOT NULL,
+          "customerName" VARCHAR(255),
+          status VARCHAR(50) DEFAULT 'active',
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      console.log("✅ Chats table created/verified");
+      
+      // Create messages table
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS messages (
+          id SERIAL PRIMARY KEY,
+          "chatId" INTEGER REFERENCES chats(id),
+          content TEXT NOT NULL,
+          "senderType" VARCHAR(50) NOT NULL,
+          "senderName" VARCHAR(255),
+          "messageType" VARCHAR(50) DEFAULT 'text',
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      console.log("✅ Messages table created/verified");
+      
+      // Create users table
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password VARCHAR(255) NOT NULL,
+          "firstName" VARCHAR(255) NOT NULL,
+          "lastName" VARCHAR(255) NOT NULL,
+          phone VARCHAR(20),
+          role VARCHAR(50) DEFAULT 'user',
+          verified BOOLEAN DEFAULT false,
+          status VARCHAR(50) DEFAULT 'active',
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      console.log("✅ Users table created/verified");
+      
+      // Create twilio_settings table
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS twilio_settings (
+          id SERIAL PRIMARY KEY,
+          "organizationId" INTEGER REFERENCES organizations(id),
+          "accountSid" VARCHAR(255) NOT NULL,
+          "authToken" VARCHAR(255) NOT NULL,
+          "phoneNumber" VARCHAR(20) NOT NULL,
+          "webhookUrl" VARCHAR(500),
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      console.log("✅ Twilio settings table created/verified");
+      
       console.log("🎉 Manual database setup completed successfully!");
       
     } catch (manualError: any) {
@@ -140,6 +211,7 @@ const PORT = process.env.PORT || 3000; // Fallback to port 3000 if not specified
 const startServer = async () => {
   try {
     console.log("🚀 Starting FixMyRV server...");
+    console.log("🔧 Enhanced database initialization - September 3, 2025");
     
     // Initialize database with comprehensive setup
     await initDatabase();
