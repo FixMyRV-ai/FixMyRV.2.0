@@ -4,7 +4,7 @@ import {
   testSmsWebhook,
   getWebhookStatus,
   getTwilioLogs
-} from "../controllers/twilio.controller";
+} from "../controllers/twilio.controller.js";
 
 const router = Router();
 

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import adminController from "../controllers/admin.controller";
-import adminChatController from "../controllers/admin-chat.controller";
-import OrganizationController from "../controllers/organization.controller";
-import OrganizationUserController from "../controllers/organizationUser.controller";
-import authMiddleware from "../middlewares/auth.middleware";
+import adminController from "../controllers/admin.controller.js";
+import adminChatController from "../controllers/admin-chat.controller.js";
+import OrganizationController from "../controllers/organization.controller.js";
+import OrganizationUserController from "../controllers/organizationUser.controller.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
