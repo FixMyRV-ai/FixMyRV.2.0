@@ -6,6 +6,8 @@ startCommand = "npm start"
 
 [build.env]
 NODE_ENV = "production"
+FORCE_DB_SYNC = "true"
 
 [variables]
 NODE_ENV = "production"
+FORCE_DB_SYNC = "true"
