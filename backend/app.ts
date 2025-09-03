@@ -58,36 +58,17 @@ v1Router.use("/", organizationUserRouter); // Organization user routes include f
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {
-  res.json({ Hello: "World", timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
+  res.json({ 
+    Hello: "World", 
+    timestamp: new Date().toISOString(), 
+    env: process.env.NODE_ENV,
+    message: "Backend API is running successfully!",
+    database: "Railway PostgreSQL connected"
+  });
 });
 
-// Serve static files from frontend in production - AFTER API ROUTES
-if (process.env.NODE_ENV === 'production') {
-  console.log('🌐 Configuring static file serving for production...');
-  const frontendPath = path.join(__dirname, '../../frontend/dist');
-  
-  // Only serve static files for non-API requests
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/')) {
-      console.log('🔗 API request bypassing static files:', req.path);
-      return next(); // Skip static file serving for API routes
-    }
-    next();
-  }, express.static(frontendPath, {
-    index: false, // Don't automatically serve index.html
-  }));
-  
-  // Handle React routing - ONLY for non-API requests
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/api/')) {
-      console.log('❌ Unhandled API request:', req.path);
-      void res.status(404).json({ error: `API endpoint not found: ${req.path}` });
-      return;
-    }
-    
-    console.log('📄 Serving React app for:', req.path);
-    res.sendFile(path.join(frontendPath, 'index.html'));
-  });
-}
+// REMOVED ALL FRONTEND STATIC FILE SERVING
+// Railway should ONLY run the backend API server
+// Frontend will be deployed separately
 
 export default app; // Use export default instead of module.exports
