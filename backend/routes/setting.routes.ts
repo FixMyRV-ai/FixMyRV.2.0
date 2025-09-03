@@ -1,6 +1,6 @@
 import { Router, RequestHandler } from "express";
-import authMiddleware from "../middlewares/auth.middleware";
-import { SettingController } from "../controllers/setting.controller";
+import authMiddleware from "../middlewares/auth.middleware.js";
+import { SettingController } from "../controllers/setting.controller.js";
 
 const settingRouter = Router();
 

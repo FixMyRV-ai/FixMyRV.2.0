@@ -1,6 +1,6 @@
 import express, { RequestHandler, Router } from "express";
-import StripeController from "../controllers/stripe.controller";
-import authMiddleware from "../middlewares/auth.middleware";
+import StripeController from "../controllers/stripe.controller.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const stripeRouter = Router();
 

@@ -1,6 +1,6 @@
 import { RequestHandler, Router } from "express";
-import PlanController from "../controllers/plan.controller";
-import authMiddleware from "../middlewares/auth.middleware";
+import PlanController from "../controllers/plan.controller.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const planRouter = Router();
 
