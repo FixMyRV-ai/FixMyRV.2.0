@@ -41,7 +41,7 @@ async function restoreDevData() {
       INSERT INTO twilio_settings ("accountSid", "authToken", "phoneNumber", "webhookUrl", "createdAt", "updatedAt")
       VALUES ($1, $2, $3, $4, NOW(), NOW())
     `, [
-      'AC123456789abcdef123456789abcdef12',
+      'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
       'your_auth_token_here',
       '+16144678149',
       'http://localhost:3000/api/v1/twilio/webhook/sms'
