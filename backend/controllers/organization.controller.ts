@@ -34,7 +34,6 @@ class OrganizationController {
                 SELECT COUNT(*)
                 FROM "organization_users"
                 WHERE "organization_users"."organizationId" = "Organization"."id"
-                AND "organization_users"."deletedAt" IS NULL
               )`),
               "userCount",
             ],

@@ -46,51 +46,11 @@ export default function initOrganizationUserModel(sequelize: Sequelize): any {
     verified!: boolean;
 
     @IsString()
-    @IsOptional()
-    verificationToken?: string;
-
-    @IsString()
-    @IsOptional()
-    resetPasswordToken?: string;
-
-    @IsDate()
-    @IsOptional()
-    resetPasswordExpires?: Date;
-
-    @IsString()
-    @IsOptional()
-    otp?: string;
-
-    @IsDate()
-    @IsOptional()
-    otpExpiry?: Date;
-
-    @IsString()
-    @IsOptional()
-    profileImage?: string;
-
-    @IsString()
     @IsNotEmpty()
     phone!: string;
 
-    @IsString()
-    @IsOptional()
-    department?: string;
-
-    @IsString()
-    @IsOptional()
-    jobTitle?: string;
-
-    @IsDate()
-    @IsOptional()
-    hireDate?: Date;
-
     @IsEnum(["active", "inactive", "suspended", "new_user", "invited"])
     status!: "active" | "inactive" | "suspended" | "new_user" | "invited";
-
-    @IsString()
-    @IsOptional()
-    notes?: string;
 
     // Add a hook to hash the password before saving
     static async hashPassword(user: OrganizationUser) {
@@ -178,30 +138,6 @@ export default function initOrganizationUserModel(sequelize: Sequelize): any {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
-      verificationToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      resetPasswordToken: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      resetPasswordExpires: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      otp: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      otpExpiry: {
-        type: DataTypes.DATE,
-        allowNull: true,
-      },
-      profileImage: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
       phone: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -209,24 +145,6 @@ export default function initOrganizationUserModel(sequelize: Sequelize): any {
           len: [1, 20],
           notEmpty: true,
         },
-      },
-      department: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          len: [0, 100],
-        },
-      },
-      jobTitle: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          len: [0, 100],
-        },
-      },
-      hireDate: {
-        type: DataTypes.DATE,
-        allowNull: true,
       },
       status: {
         type: DataTypes.ENUM("active", "inactive", "suspended", "new_user", "invited"),
@@ -236,10 +154,6 @@ export default function initOrganizationUserModel(sequelize: Sequelize): any {
           isIn: [["active", "inactive", "suspended", "new_user", "invited"]],
         },
       },
-      notes: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
     },
     {
       sequelize,
@@ -248,7 +162,6 @@ export default function initOrganizationUserModel(sequelize: Sequelize): any {
       hooks: {
         beforeSave: OrganizationUser.hashPassword,
       },
-      paranoid: true,
       indexes: [
         {
           unique: true,

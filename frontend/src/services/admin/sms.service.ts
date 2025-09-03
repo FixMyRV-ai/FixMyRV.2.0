@@ -18,7 +18,7 @@ interface SMSChat {
   createdAt: string;
   updatedAt: string;
   messages: SMSMessage[];
-  organizationUser: {
+  organizationUser?: {
     id: number;
     firstName: string;
     lastName: string;
@@ -26,7 +26,7 @@ interface SMSChat {
     organization: {
       name: string;
     };
-  };
+  } | null;
 }
 
 export class AdminSMSService extends BaseService {

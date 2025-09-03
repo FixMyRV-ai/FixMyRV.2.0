@@ -112,7 +112,10 @@ const SMSConversations = () => {
                         {/* Line 1: User Name + SMS Badge */}
                         <div className="flex items-center justify-between">
                           <div className="font-medium text-sm">
-                            {chat.organizationUser.firstName} {chat.organizationUser.lastName}
+                            {chat.organizationUser ? 
+                              `${chat.organizationUser.firstName} ${chat.organizationUser.lastName}` :
+                              'Unknown User'
+                            }
                           </div>
                           <Badge variant="secondary" className="text-xs">
                             SMS
@@ -121,7 +124,7 @@ const SMSConversations = () => {
                         
                         {/* Line 2: Organization */}
                         <div className="text-sm text-muted-foreground">
-                          {chat.organizationUser.organization.name}
+                          {chat.organizationUser?.organization?.name || 'Unknown Organization'}
                         </div>
                         
                         {/* Line 3: Conversation Title */}
@@ -132,7 +135,7 @@ const SMSConversations = () => {
                         {/* Line 4: Phone + Last Message Date */}
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span className="flex items-center gap-1 truncate">
-                            📞 {chat.organizationUser.phone}
+                            📞 {chat.organizationUser?.phone || 'No phone'}
                           </span>
                           <span className="flex-shrink-0">
                             {formatTime(chat.updatedAt).split(',')[0]}
@@ -155,14 +158,22 @@ const SMSConversations = () => {
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    {selectedChat.organizationUser.firstName} {selectedChat.organizationUser.lastName}
+                    {selectedChat.organizationUser ? 
+                      `${selectedChat.organizationUser.firstName} ${selectedChat.organizationUser.lastName}` :
+                      'Unknown User'
+                    }
                   </CardTitle>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
                     <span className="flex items-center gap-1">
                       <Phone className="w-4 h-4" />
-                      {formatPhone(selectedChat.organizationUser.phone)}
+                      {selectedChat.organizationUser?.phone ? 
+                        formatPhone(selectedChat.organizationUser.phone) : 
+                        'No phone'
+                      }
                     </span>
-                    <span>{selectedChat.organizationUser.organization.name}</span>
+                    <span>
+                      {selectedChat.organizationUser?.organization?.name || 'No organization'}
+                    </span>
                   </div>
                 </div>
               ) : (

@@ -9,22 +9,6 @@ export default function initOrganizationModel(sequelize: Sequelize): any {
     @IsString()
     name!: string;
 
-    @IsString()
-    @IsOptional()
-    description?: string;
-
-    @IsString()
-    @IsOptional()
-    email?: string;
-
-    @IsString()
-    @IsOptional()
-    phone?: string;
-
-    @IsString()
-    @IsOptional()
-    address?: string;
-
     @IsDate()
     @IsOptional()
     createdAt?: Date;
@@ -48,25 +32,6 @@ export default function initOrganizationModel(sequelize: Sequelize): any {
           notEmpty: true,
           len: [2, 255],
         },
-      },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-          isEmail: true,
-        },
-      },
-      phone: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      address: {
-        type: DataTypes.TEXT,
-        allowNull: true,
       },
     },
     {
