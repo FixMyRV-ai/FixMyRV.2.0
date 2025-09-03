@@ -2,7 +2,7 @@ import { PoolConfig } from "pg";
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { DistanceStrategy } from "@langchain/community/vectorstores/pgvector";
-import { Setting } from "../models/index";
+import { Setting } from "../models/index.js";
 
 let vectorStoreInstance: PGVectorStore | null = null;
 

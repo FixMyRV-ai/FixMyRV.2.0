@@ -1,8 +1,8 @@
-import { Chat, Message, OrganizationUser, TwilioSetting } from '../models/index';
-import { AppService } from './langchain.service';
-import { getVectorStore } from '../config/database';
+import { Chat, Message, OrganizationUser, TwilioSetting } from '../models/index.js';
+import { AppService } from './langchain.service.js';
+import { getVectorStore } from '../config/database.js';
 import { ChatOpenAI } from "@langchain/openai";
-import { Setting } from '../models/index';
+import { Setting } from '../models/index.js';
 const twilio = require('twilio'); // Use require instead of import
 
 interface SmsMessageData {

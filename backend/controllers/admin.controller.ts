@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
-import { User, SourceContent, Chat, sequelize } from "../models/index";
+import { User, SourceContent, Chat, sequelize } from "../models/index.js";
 import { Op } from "sequelize";
-import StripeController from "./stripe.controller";
+import StripeController from "./stripe.controller.js";
 import stripe from "stripe";
-import transactionRouter from "../routes/transaction.routes";
-import TransactionController from "./transaction.controller";
+import transactionRouter from "../routes/transaction.routes.js";
+import TransactionController from "./transaction.controller.js";
 
 class AdminController {
   getDashboard: RequestHandler = async (req, res) => {

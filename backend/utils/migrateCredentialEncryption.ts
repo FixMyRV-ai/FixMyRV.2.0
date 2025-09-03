@@ -1,5 +1,5 @@
-import { Setting, TwilioSetting } from '../models/index';
-import CredentialEncryption from './credentialEncryption';
+import { Setting, TwilioSetting } from '../models/index.js';
+import CredentialEncryption from './credentialEncryption.js';
 
 (async () => {
   try {

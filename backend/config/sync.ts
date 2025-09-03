@@ -1,4 +1,4 @@
-import sequelize from "../models/index";
+import sequelize from "../models/index.js";
 
 const syncDatabase = async () => {
   try {

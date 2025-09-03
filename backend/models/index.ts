@@ -1,15 +1,15 @@
 import dotenv from "dotenv";
 import { Sequelize } from "sequelize";
 import { ModelCtor, Model } from "sequelize";
-import initUserModel from "./user";
-import initChatModel from "./chat";
-import initMessageModel from "./message";
-import initSettingmodel from "./setting";
-import initSourceContentmodel from "./sourceContent";
-import initTwilioSettingModel from "./twilioSetting";
-import initTwilioLogModel from "./twilioLog";
-import initOrganizationModel from "./organization";
-import initOrganizationUserModel from "./organizationUser";
+import initUserModel from "./user.js";
+import initChatModel from "./chat.js";
+import initMessageModel from "./message.js";
+import initSettingmodel from "./setting.js";
+import initSourceContentmodel from "./sourceContent.js";
+import initTwilioSettingModel from "./twilioSetting.js";
+import initTwilioLogModel from "./twilioLog.js";
+import initOrganizationModel from "./organization.js";
+import initOrganizationUserModel from "./organizationUser.js";
 
 dotenv.config();
 
