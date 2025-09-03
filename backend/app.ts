@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
@@ -14,6 +15,10 @@ import transactionRouter from "./routes/transaction.routes.js";
 import twilioRouter from "./routes/twilio.routes.js";
 import organizationRouter from "./routes/organization.routes.js";
 import organizationUserRouter from "./routes/organizationUser.routes.js";
+
+// Create __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
