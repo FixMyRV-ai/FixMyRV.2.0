@@ -1,0 +1,11 @@
+[build]
+buildCommand = "npm run build"
+
+[start]
+startCommand = "npm start"
+
+[build.env]
+NODE_ENV = "production"
+
+[variables]
+NODE_ENV = "production"
