@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { Chat, Message } from "../models/index";
+import { Chat, Message } from "../models/index.js";
 import { v4 as uuidv4 } from "uuid";
-import { AuthenticatedRequest } from "../types/user";
-import { appService } from "../services/langchain.service";
+import { AuthenticatedRequest } from "../types/user.js";
+import { appService } from "../services/langchain.service.js";
 
 class ChatController {
   async getAllChats(req: AuthenticatedRequest, res: Response) {

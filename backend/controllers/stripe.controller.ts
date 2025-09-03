@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { Request, Response } from "express";
-import sequelize, { User } from "../models/index";
-import { AuthenticatedRequest } from "../types/user";
+import sequelize, { User } from "../models/index.js";
+import { AuthenticatedRequest } from "../types/user.js";
 import userController from "./user.controller";
 
 // Initialize Stripe only if API key is available

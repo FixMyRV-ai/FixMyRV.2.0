@@ -1,6 +1,6 @@
 // Script to populate Twilio settings in the database
-import { TwilioSetting } from "../models/index";
-import sequelize from "../models/index";
+import { TwilioSetting } from "../models/index.js";
+import sequelize from "../models/index.js";
 
 const insertTwilioSettings = async () => {
   try {

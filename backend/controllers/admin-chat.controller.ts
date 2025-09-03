@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Chat, Message, OrganizationUser, Organization } from "../models";
+import { Chat, Message, OrganizationUser, Organization } from "../models/index.js";
 
 interface AdminChatController {
   getSMSChats: (req: Request, res: Response) => Promise<void>;

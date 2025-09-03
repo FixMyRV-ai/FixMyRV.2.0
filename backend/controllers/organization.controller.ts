@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { Organization, User, OrganizationUser, sequelize } from "../models/index";
+import { Organization, User, OrganizationUser, sequelize } from "../models/index.js";
 import { Op } from "sequelize";
 
 class OrganizationController {

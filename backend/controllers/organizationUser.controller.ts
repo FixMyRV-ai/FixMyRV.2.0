@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op, fn, col, literal } from 'sequelize';
-import { OrganizationUser, Organization, TwilioSetting } from '../models';
+import { OrganizationUser, Organization, TwilioSetting } from '../models/index.js';
 import twilio from 'twilio';
 
 class OrganizationUserController {

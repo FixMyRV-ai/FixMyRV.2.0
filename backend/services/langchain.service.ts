@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import dotenv from "dotenv";
-import { Setting } from "../models/index";
+import { Setting } from "../models/index.js";
 
 dotenv.config();
 

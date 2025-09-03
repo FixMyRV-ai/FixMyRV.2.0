@@ -1,4 +1,4 @@
-import { Setting, TwilioSetting } from '../models/index';
+import { Setting, TwilioSetting } from '../models/index.js';
 
 (async () => {
   try {

@@ -1,4 +1,4 @@
-import sequelize, { User } from "../models/index";
+import sequelize, { User } from "../models/index.js";
 import { validate } from "class-validator"; // Import class-validator to perform validation
 
 const insertAdminUser = async () => {

@@ -1,4 +1,4 @@
-import { User } from "../models/index";
+import { User } from "../models/index.js";
 import nodemailer, { TransportOptions } from "nodemailer";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -6,10 +6,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { AuthenticatedRequest, User as UserType } from "../types/user";
+import { AuthenticatedRequest, User as UserType } from "../types/user.js";
 import { Op, Model as SequelizeModel } from "sequelize";
 import { register } from "module";
-import emailService from "../services/email.service";
+import emailService from "../services/email.service.js";
 
 type UserModel = UserType & SequelizeModel;
 import Stripe from "stripe";

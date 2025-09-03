@@ -15,8 +15,8 @@ import { PoolConfig } from "pg";
 import { Op } from "sequelize";
 import { fileURLToPath } from "url";
 import { v4 as uuidv4 } from "uuid";
-import { Setting, SourceContent } from "../models/index";
-import { getVectorStore } from "../config/database";
+import { Setting, SourceContent } from "../models/index.js";
+import { getVectorStore } from "../config/database.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Create __dirname equivalent for ES modules

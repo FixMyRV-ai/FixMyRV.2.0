@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../models/index";
+import { User } from "../models/index.js";
 import { Op } from "sequelize";
 import dotenv from "dotenv";
 import Stripe from "stripe";

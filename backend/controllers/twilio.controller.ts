@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { TwilioSetting, TwilioLog } from "../models";
+import { TwilioSetting, TwilioLog } from "../models/index.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";

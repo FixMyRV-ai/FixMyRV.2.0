@@ -1,9 +1,9 @@
 import { OpenAIEmbeddings, ChatOpenAI } from "@langchain/openai";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
-import { Setting, Message, User } from "../models/index";
-import { AuthenticatedRequest } from "../types/user";
-import { getVectorStore } from "../config/database";
+import { Setting, Message, User } from "../models/index.js";
+import { AuthenticatedRequest } from "../types/user.js";
+import { getVectorStore } from "../config/database.js";
 dotenv.config();
 
 class OpenaiController {

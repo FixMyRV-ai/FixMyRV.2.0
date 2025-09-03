@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Setting, TwilioSetting } from "../models/index";
+import { Setting, TwilioSetting } from "../models/index.js";
 
 export class SettingController {
   static read = async (req: any, res: any) => {

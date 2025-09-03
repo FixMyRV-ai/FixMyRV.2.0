@@ -1,4 +1,4 @@
-import { Setting } from '../models/index';
+import { Setting } from '../models/index.js';
 
 (async () => {
   try {

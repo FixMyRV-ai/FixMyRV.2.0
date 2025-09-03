@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
 import { Router, Request, Response } from "express";
-import { sequelize } from "../models/index";
-import initUserModel from "../models/user";
+import { sequelize } from "../models/index.js";
+import initUserModel from "../models/user.js";
 import { validate } from "class-validator";
 import { plainToClass } from "class-transformer";
-import { AuthenticatedRequest, UserUpdateRequest } from "../types/user";
+import { AuthenticatedRequest, UserUpdateRequest } from "../types/user.js";
 
 const User = initUserModel(sequelize);
 
