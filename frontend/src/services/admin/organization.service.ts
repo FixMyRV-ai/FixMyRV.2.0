@@ -9,7 +9,7 @@ import {
 
 class OrganizationService extends BaseService {
   constructor() {
-    super("/organizations");
+    super("/admin");
   }
 
   // Get all organizations with pagination
@@ -18,28 +18,28 @@ class OrganizationService extends BaseService {
     if (params.page) queryParams.append("page", params.page.toString());
     if (params.limit) queryParams.append("limit", params.limit.toString());
     
-    const url = queryParams.toString() ? `/?${queryParams.toString()}` : "/";
+    const url = queryParams.toString() ? `/organizations?${queryParams.toString()}` : "/organizations";
     return await this.get(url);
   }
 
   // Get single organization with users
   async getOrganization(id: number): Promise<OrganizationResponse> {
-    return await this.get(`/${id}`);
+    return await this.get(`/organizations/${id}`);
   }
 
   // Create new organization
   async createOrganization(data: CreateOrganizationData): Promise<OrganizationResponse> {
-    return await this.post("/", data);
+    return await this.post("/organizations", data);
   }
 
   // Update organization
   async updateOrganization(id: number, data: UpdateOrganizationData): Promise<OrganizationResponse> {
-    return await this.put(`/${id}`, data);
+    return await this.put(`/organizations/${id}`, data);
   }
 
   // Delete organization
   async deleteOrganization(id: number): Promise<{ message: string }> {
-    return await this.delete(`/${id}`);
+    return await this.delete(`/organizations/${id}`);
   }
 
   // Get organization users
@@ -51,18 +51,18 @@ class OrganizationService extends BaseService {
     if (params.page) queryParams.append("page", params.page.toString());
     if (params.limit) queryParams.append("limit", params.limit.toString());
     
-    const url = queryParams.toString() ? `/${id}/users?${queryParams.toString()}` : `/${id}/users`;
+    const url = queryParams.toString() ? `/organizations/${id}/users?${queryParams.toString()}` : `/organizations/${id}/users`;
     return await this.get(url);
   }
 
   // Add user to organization
   async addUserToOrganization(organizationId: number, userId: number): Promise<{ message: string; data: any }> {
-    return await this.post(`/${organizationId}/users`, { userId });
+    return await this.post(`/organizations/${organizationId}/users`, { userId });
   }
 
   // Remove user from organization
   async removeUserFromOrganization(organizationId: number, userId: number): Promise<{ message: string }> {
-    return await this.delete(`/${organizationId}/users/${userId}`);
+    return await this.delete(`/organizations/${organizationId}/users/${userId}`);
   }
 }
 
