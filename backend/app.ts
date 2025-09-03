@@ -24,6 +24,14 @@ const app = express();
 
 app.use(cors()); // Enable CORS for cross-origin requests
 
+// Debug middleware for production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+  });
+}
+
 // Apply raw body parsing for Stripe webhook route
 app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));
 
@@ -56,14 +64,28 @@ app.get("/api/v1/", (req, res) => {
 // Serve static files from frontend in production
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
-  app.use(express.static(frontendPath));
+  
+  // Serve static files, but NOT for API routes
+  app.use(express.static(frontendPath, {
+    index: false, // Don't serve index.html automatically
+    setHeaders: (res, path) => {
+      // Don't cache API responses
+      if (path.includes('/api/')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  }));
   
   // Handle React routing - send all non-API requests to index.html
   app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api/')) {
-      res.sendFile(path.join(frontendPath, 'index.html'));
+    console.log('Catch-all route hit:', req.path, 'Starts with /api:', req.path.startsWith('/api/'));
+    
+    if (req.path.startsWith('/api/')) {
+      // This is an API request that wasn't handled - return 404
+      res.status(404).json({ error: `API endpoint not found: ${req.path}` });
     } else {
-      res.status(404).json({ error: 'API endpoint not found' });
+      // This is a frontend route - serve React app
+      res.sendFile(path.join(frontendPath, 'index.html'));
     }
   });
 }
