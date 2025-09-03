@@ -21,7 +21,7 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
       console.log(`📊 Database status: ${orgCount} orgs, ${userCount} users, ${chatCount} chats`);
     } catch (tableError: any) {
       console.error("❌ Error checking tables:", tableError.message);
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: 'Database tables not available - please check database setup',
         error: tableError.message,
@@ -30,6 +30,7 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
           suggestion: 'Run database migrations or check table creation'
         }
       });
+      return;
     }
     
     const smsChats = await Chat.findAll({
@@ -74,7 +75,7 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
     
     // If no SMS chats found, return helpful message
     if (smsChats.length === 0) {
-      return res.json({
+      res.json({
         success: true,
         data: [],
         message: 'No SMS conversations found yet',
@@ -85,6 +86,7 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
           suggestion: 'SMS conversations will appear here after customers send messages'
         }
       });
+      return;
     }
 
     res.json({
