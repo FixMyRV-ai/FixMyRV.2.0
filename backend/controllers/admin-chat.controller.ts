@@ -10,6 +10,28 @@ interface AdminChatController {
  */
 const getSMSChats = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log("📱 Fetching SMS chats...");
+    
+    // First, check if tables exist
+    try {
+      const orgCount = await Organization.count();
+      const userCount = await OrganizationUser.count();
+      const chatCount = await Chat.count();
+      
+      console.log(`📊 Database status: ${orgCount} orgs, ${userCount} users, ${chatCount} chats`);
+    } catch (tableError: any) {
+      console.error("❌ Error checking tables:", tableError.message);
+      return res.status(500).json({
+        success: false,
+        message: 'Database tables not available - please check database setup',
+        error: tableError.message,
+        debug: {
+          tablesChecked: ['organizations', 'organization_users', 'chats'],
+          suggestion: 'Run database migrations or check table creation'
+        }
+      });
+    }
+    
     const smsChats = await Chat.findAll({
       where: {
         channel: 'sms'
@@ -32,11 +54,13 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
         {
           model: OrganizationUser,
           as: 'organizationUser',
+          required: false, // Allow null organization users
           attributes: ['id', 'firstName', 'lastName', 'phone'],
           include: [
             {
               model: Organization,
               as: 'organization',
+              required: false, // Allow null organizations
               attributes: ['id', 'name']
             }
           ]
@@ -46,13 +70,39 @@ const getSMSChats = async (req: Request, res: Response): Promise<void> => {
       limit: 50 // Limit to recent conversations
     });
 
-    res.json(smsChats);
+    console.log(`✅ Found ${smsChats.length} SMS chats`);
+    
+    // If no SMS chats found, return helpful message
+    if (smsChats.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        message: 'No SMS conversations found yet',
+        debug: {
+          totalChats: await Chat.count(),
+          smsChats: 0,
+          webChats: await Chat.count({ where: { channel: 'web' } }),
+          suggestion: 'SMS conversations will appear here after customers send messages'
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: smsChats,
+      count: smsChats.length
+    });
+    
   } catch (error: any) {
-    console.error('Error fetching SMS chats:', error);
+    console.error('❌ Error fetching SMS chats:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch SMS conversations',
-      error: error?.message || 'Unknown error'
+      error: error?.message || 'Unknown error',
+      debug: {
+        errorType: error?.name || 'Unknown',
+        stack: error?.stack?.split('\n').slice(0, 5) // First 5 lines of stack trace
+      }
     });
   }
 };
