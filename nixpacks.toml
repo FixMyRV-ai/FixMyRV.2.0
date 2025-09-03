@@ -1,8 +1,8 @@
 [build]
-buildCommand = "npm run build"
+buildCommand = "cd backend && npm ci && npm run build"
 
 [start]
-startCommand = "npm start"
+startCommand = "cd backend && npm start"
 
 [build.env]
 NODE_ENV = "production"
