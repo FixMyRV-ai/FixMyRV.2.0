@@ -4,11 +4,10 @@
   "main": "server.ts",
   "type": "module",
   "scripts": {
-    "start": "tsx server.ts",
+    "start": "node dist/server.js",
     "dev": "tsx watch server.ts",
     "build": "tsc",
-    "build:prod": "tsc -d && npm run build",
-    "build:declarations": "tsc -d",
+    "build:prod": "tsc",
     "clean": "rimraf dist",
     "prebuild": "npm run clean"
   },
