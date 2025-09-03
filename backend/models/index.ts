@@ -13,20 +13,61 @@ import initOrganizationUserModel from "./organizationUser.js";
 
 dotenv.config();
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME as string,
-  process.env.DB_USER as string,
-  process.env.DB_PASSWORD as string,
-  {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT as string, 10),
+console.log("🔍 Database connection info:");
+console.log("- DB_HOST:", process.env.DB_HOST || "undefined");
+console.log("- DB_PORT:", process.env.DB_PORT || "undefined");  
+console.log("- DB_USER:", process.env.DB_USER || "undefined");
+console.log("- DB_NAME:", process.env.DB_NAME || "undefined");
+console.log("- NODE_ENV:", process.env.NODE_ENV || "undefined");
+
+// Railway-specific database URL check
+const databaseUrl = process.env.DATABASE_URL;
+let sequelize: Sequelize;
+
+if (databaseUrl) {
+  console.log("🚄 Railway DATABASE_URL detected, using connection string");
+  sequelize = new Sequelize(databaseUrl, {
     dialect: "postgres",
-    logging: true,
+    logging: process.env.NODE_ENV === 'development',
     define: {
       timestamps: true,
     },
-  }
-);
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+    retry: {
+      max: 3,
+    },
+  });
+} else {
+  console.log("🔧 Using individual environment variables");
+  sequelize = new Sequelize(
+    process.env.DB_NAME as string,
+    process.env.DB_USER as string,
+    process.env.DB_PASSWORD as string,
+    {
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT as string, 10),
+      dialect: "postgres",
+      logging: process.env.NODE_ENV === 'development',
+      define: {
+        timestamps: true,
+      },
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
+      retry: {
+        max: 3,
+      },
+    }
+  );
+}
 
 const User: any = initUserModel(sequelize);
 const Chat: any = initChatModel(sequelize);
