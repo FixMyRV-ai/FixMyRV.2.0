@@ -39,7 +39,7 @@ app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Define routes for user and authentication management
+// Define routes for user and authentication management - MUST BE BEFORE STATIC FILES
 app.use("/uploads", express.static("uploads"));
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
@@ -58,35 +58,35 @@ v1Router.use("/", organizationUserRouter); // Organization user routes include f
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {
-  res.send({ Hello: "World" });
+  res.json({ Hello: "World", timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
 });
 
-// Serve static files from frontend in production
+// Serve static files from frontend in production - AFTER API ROUTES
 if (process.env.NODE_ENV === 'production') {
+  console.log('🌐 Configuring static file serving for production...');
   const frontendPath = path.join(__dirname, '../../frontend/dist');
   
-  // Serve static files, but NOT for API routes
-  app.use(express.static(frontendPath, {
-    index: false, // Don't serve index.html automatically
-    setHeaders: (res, path) => {
-      // Don't cache API responses
-      if (path.includes('/api/')) {
-        res.setHeader('Cache-Control', 'no-cache');
-      }
+  // Only serve static files for non-API requests
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      console.log('🔗 API request bypassing static files:', req.path);
+      return next(); // Skip static file serving for API routes
     }
+    next();
+  }, express.static(frontendPath, {
+    index: false, // Don't automatically serve index.html
   }));
   
-  // Handle React routing - send all non-API requests to index.html
+  // Handle React routing - ONLY for non-API requests
   app.get('*', (req, res) => {
-    console.log('Catch-all route hit:', req.path, 'Starts with /api:', req.path.startsWith('/api/'));
-    
     if (req.path.startsWith('/api/')) {
-      // This is an API request that wasn't handled - return 404
-      res.status(404).json({ error: `API endpoint not found: ${req.path}` });
-    } else {
-      // This is a frontend route - serve React app
-      res.sendFile(path.join(frontendPath, 'index.html'));
+      console.log('❌ Unhandled API request:', req.path);
+      void res.status(404).json({ error: `API endpoint not found: ${req.path}` });
+      return;
     }
+    
+    console.log('📄 Serving React app for:', req.path);
+    res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
 
