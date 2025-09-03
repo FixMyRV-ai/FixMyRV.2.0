@@ -1,7 +1,7 @@
 import { createServer } from "http";
-import app from "./app";
-import sync from "./config/sync";
-import sequelize from "./models/index"; // Import the sync function
+import app from "./app.js";
+import sync from "./config/sync.js";
+import sequelize from "./models/index.js"; // Import the sync function
 import dotenv from "dotenv";
 
 dotenv.config();
