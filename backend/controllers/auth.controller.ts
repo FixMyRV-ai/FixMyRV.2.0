@@ -23,6 +23,16 @@ dotenv.config();
 
 const authController = {
   async sendConfirmationEmail(user: any) {
+    // Check if email configuration is available
+    if (!process.env.MAIL_HOST || !process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
+      console.warn("⚠️ Email configuration not found, skipping confirmation email");
+      // Still set verification token for manual verification if needed
+      const token = String(crypto.randomBytes(32).toString("hex"));
+      user.verificationToken = token;
+      await user.save();
+      return;
+    }
+
     const token = String(crypto.randomBytes(32).toString("hex")); // Generate a unique token
     const verificationUrl = `${process.env.BACKEND_API_URL}/auth/verify-email?token=${token}&email=${user.email}`;
     // Store the token in the user record for later verification (you might want to add a new field in your User model)
