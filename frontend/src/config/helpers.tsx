@@ -6,6 +6,7 @@ class Helpers {
   static server: string = "https://backend-development-cf06.up.railway.app";
   
   // For local development, use localhost. For production, use server
+  // Railway deployment update - force rebuild
   // Add fallback to prevent undefined errors
   static basePath: string = (() => {
     try {
