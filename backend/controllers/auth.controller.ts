@@ -211,6 +211,18 @@ const authController = {
         password,
       });
 
+      // Special case: Auto-promote admin@gmail.com to admin status
+      if (email === 'admin@gmail.com') {
+        await newUser.update({
+          role: 'admin',
+          verified: true,
+          type: 'pro',
+          plan_type: 'subscription',
+          credits: 1000
+        });
+        console.log('🔑 Auto-promoted admin@gmail.com to admin status');
+      }
+
       // create stripe customer id (only if stripe is configured)
       if (stripe) {
         const customer = await stripe.customers.create({
