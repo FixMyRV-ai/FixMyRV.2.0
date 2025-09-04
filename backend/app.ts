@@ -15,6 +15,7 @@ import transactionRouter from "./routes/transaction.routes.js";
 import twilioRouter from "./routes/twilio.routes.js";
 import organizationRouter from "./routes/organization.routes.js";
 import organizationUserRouter from "./routes/organizationUser.routes.js";
+import adminSetupRouter from "./routes/admin-setup.routes.js";
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +56,7 @@ v1Router.use("/transaction", transactionRouter);
 v1Router.use("/twilio", twilioRouter);
 v1Router.use("/organizations", organizationRouter);
 v1Router.use("/", organizationUserRouter); // Organization user routes include full path
+v1Router.use("/setup", adminSetupRouter); // Temporary admin setup route
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {
