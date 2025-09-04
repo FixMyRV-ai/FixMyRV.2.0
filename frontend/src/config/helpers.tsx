@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 
 class Helpers {
   static localhost: string = "http://localhost:3000";
-  static server: string = "https://app.fixmyrv.ai/backend";
+  static server: string = "https://backend-development-cf06.up.railway.app";
   
   // For local development, use localhost. For production, use server
   // Add fallback to prevent undefined errors
