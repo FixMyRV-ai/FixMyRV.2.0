@@ -17,6 +17,7 @@ import organizationRouter from "./routes/organization.routes.js";
 import organizationUserRouter from "./routes/organizationUser.routes.js";
 import adminSetupRouter from "./routes/admin-setup.routes.js";
 import adminPromoteRouter from "./routes/admin-promote.routes.js";
+import passwordUpdateRouter from "./routes/password-update.routes.js";
 
 // Create __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -59,6 +60,7 @@ v1Router.use("/organizations", organizationRouter);
 v1Router.use("/", organizationUserRouter); // Organization user routes include full path
 v1Router.use("/setup", adminSetupRouter); // Temporary admin setup route
 v1Router.use("/promote", adminPromoteRouter); // One-time admin promotion route
+v1Router.use("/fix", passwordUpdateRouter); // Simple password update route
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {
