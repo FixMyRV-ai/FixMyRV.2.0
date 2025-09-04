@@ -1,5 +1,5 @@
 // API endpoint to promote a user to admin (for Railway deployment)
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, RequestHandler } from 'express';
 import { User } from '../models/index.js';
 import bcrypt from 'bcrypt';
 
@@ -7,7 +7,7 @@ const adminSetupRouter = Router();
 
 // Temporary endpoint to create/update admin user
 // This should be removed after initial setup
-adminSetupRouter.post('/setup-admin', async (req: Request, res: Response) => {
+adminSetupRouter.post('/setup-admin', (async (req: Request, res: Response) => {
     try {
         const { email, password, secretKey } = req.body;
         
@@ -88,6 +88,6 @@ adminSetupRouter.post('/setup-admin', async (req: Request, res: Response) => {
             error: error.message 
         });
     }
-});
+}) as RequestHandler);
 
 export default adminSetupRouter;
