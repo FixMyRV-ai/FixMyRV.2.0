@@ -73,6 +73,37 @@ app.get("/api/v1/", (req, res) => {
   });
 });
 
+// Test endpoint for debugging login
+app.get("/api/test-user", async (req: express.Request, res: express.Response): Promise<void> => {
+  try {
+    const { User } = await import('./models/index.js');
+    const bcrypt = await import('bcrypt');
+    
+    const user = await User.findOne({ where: { email: 'admin@gmail.com' } });
+    
+    if (!user) {
+      res.json({ error: 'User not found' });
+      return;
+    }
+    
+    const testPassword = '12345678';
+    const isMatch = await bcrypt.default.compare(testPassword, user.password);
+    
+    res.json({
+      userExists: true,
+      email: user.email,
+      verified: user.verified,
+      role: user.role,
+      hasPassword: !!user.password,
+      passwordMatches: isMatch,
+      passwordLength: user.password?.length || 0
+    });
+    
+  } catch (error) {
+    res.json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 // REMOVED ALL FRONTEND STATIC FILE SERVING
 // Railway should ONLY run the backend API server
 // Frontend will be deployed separately
