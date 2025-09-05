@@ -44,6 +44,11 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Define routes for user and authentication management - MUST BE BEFORE STATIC FILES
 app.use("/uploads", express.static("uploads"));
+
+// CRITICAL: Serve static assets with correct MIME types BEFORE any catch-all routes
+// This fixes the issue where Railway serves frontend files but assets get served as HTML
+app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets")));
+app.use("/favicon.png", express.static(path.join(__dirname, "../frontend/dist/favicon.png")));
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
 v1Router.use("/users", userRoutes);
