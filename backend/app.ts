@@ -104,6 +104,80 @@ app.get("/api/test-user", async (req: express.Request, res: express.Response): P
   }
 });
 
+// Simple login endpoint for debugging
+app.post("/api/simple-login", async (req: express.Request, res: express.Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+    const { User } = await import('./models/index.js');
+    const bcrypt = await import('bcrypt');
+    const jwt = await import('jsonwebtoken');
+    
+    console.log('🔄 Simple login attempt for:', email);
+    
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password required' });
+      return;
+    }
+    
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
+    }
+    
+    const isMatch = await bcrypt.default.compare(password, user.password);
+    if (!isMatch) {
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
+    }
+    
+    if (!user.verified) {
+      res.status(403).json({ error: 'Email not verified' });
+      return;
+    }
+    
+    // Check if JWT_SECRET exists
+    if (!process.env.JWT_SECRET) {
+      res.status(500).json({ error: 'JWT_SECRET not configured' });
+      return;
+    }
+    
+    console.log('✅ Creating token...');
+    const token = jwt.default.sign(
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        credits: user.credits,
+        type: user.type,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+    
+    console.log('✅ Login successful for:', email);
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        verified: user.verified,
+        type: user.type,
+        credits: user.credits
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Simple login error:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 // REMOVED ALL FRONTEND STATIC FILE SERVING
 // Railway should ONLY run the backend API server
 // Frontend will be deployed separately
