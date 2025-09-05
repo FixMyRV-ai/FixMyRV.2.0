@@ -73,51 +73,6 @@ app.get("/api/v1/", (req, res) => {
   });
 });
 
-// Emergency admin password reset - no auth required
-app.get("/api/emergency-admin-reset", async (req, res) => {
-  try {
-    const bcrypt = await import('bcrypt');
-    const { sequelize } = await import('./models/index.js');
-    
-    console.log('🔄 Emergency admin password reset for admin@gmail.com...');
-    
-    // Hash the password 12345678
-    const hashedPassword = await bcrypt.default.hash('12345678', 10);
-    
-    // Run direct SQL update
-    const [results, metadata] = await sequelize.query(`
-        UPDATE users 
-        SET 
-            password = :hashedPassword,
-            role = 'admin',
-            verified = true,
-            "verificationToken" = null,
-            type = 'pro',
-            "plan_type" = 'subscription',
-            credits = 1000,
-            "updatedAt" = NOW()
-        WHERE email = 'admin@gmail.com'
-    `, {
-        replacements: { hashedPassword }
-    });
-    
-    console.log('✅ Emergency reset completed, rows affected:', metadata);
-    
-    res.json({
-        success: true,
-        message: 'admin@gmail.com password reset to 12345678',
-        rowsAffected: metadata
-    });
-    
-  } catch (error) {
-    console.error('❌ Emergency reset failed:', error);
-    res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
 // REMOVED ALL FRONTEND STATIC FILE SERVING
 // Railway should ONLY run the backend API server
 // Frontend will be deployed separately
