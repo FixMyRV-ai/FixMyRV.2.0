@@ -6,3 +6,7 @@ temp-frontend/
 *.ps1
 scripts/
 WebAppDemoMileStone1.mp4
+*.html
+**/index.html
+**/dist/
+node_modules/

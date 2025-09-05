@@ -8,5 +8,10 @@
   },
   "environment": {
     "NODE_ENV": "production"
+  },
+  "deploy": {
+    "detectEngine": false,
+    "buildCommand": "cd backend && npm install && npm run build",
+    "startCommand": "cd backend && npm start"
   }
 }
