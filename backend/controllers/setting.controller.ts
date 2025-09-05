@@ -4,9 +4,19 @@ import { Setting, TwilioSetting } from "../models/index.js";
 export class SettingController {
   static read = async (req: any, res: any) => {
     try {
-      const result = await Setting.findOne();
+      let result = await Setting.findOne();
+      
+      // If no settings exist, create default ones
       if (!result) {
-        return res.status(404).json({ message: "API configuration not found" });
+        console.log('No settings found, creating default settings...');
+        result = await Setting.create({
+          key: '', // Empty API key - user will need to configure
+          chatModel: 'gpt-3.5-turbo',
+          embeddingModel: 'text-embedding-ada-002',
+          outputTokens: 1000,
+          systemPrompt: 'You are a helpful AI assistant for RV troubleshooting and maintenance.'
+        });
+        console.log('✅ Default settings created');
       }
       
       // Check if API key looks valid before trying to fetch models
@@ -31,6 +41,7 @@ export class SettingController {
         models: models,
       });
     } catch (error: any) {
+      console.error('❌ Error in settings read:', error);
       res.status(500).json({ message: error.message || "Error reading resource" });
     }
   };
@@ -73,15 +84,25 @@ export class SettingController {
   // Twilio Settings Methods
   static readTwilioSettings = async (req: any, res: any) => {
     try {
-      const result = await TwilioSetting.findOne();
+      let result = await TwilioSetting.findOne();
+      
+      // If no Twilio settings exist, create default ones
       if (!result) {
-        return res.status(404).json({ message: "Twilio configuration not found" });
+        console.log('No Twilio settings found, creating defaults...');
+        result = await TwilioSetting.create({
+          accountSid: '',
+          authToken: '',
+          phoneNumber: '',
+          optinMessage: 'Thank you for contacting us! Reply STOP to opt out.'
+        });
+        console.log('✅ Default Twilio settings created');
       }
 
       res.status(200).json({
         data: result,
       });
     } catch (error: any) {
+      console.error('❌ Error in Twilio settings read:', error);
       res.status(500).json({ message: error.message || "Error reading Twilio settings" });
     }
   };
