@@ -73,6 +73,21 @@ app.get("/api/v1/", (req, res) => {
   });
 });
 
+// Environment check endpoint
+app.get("/api/env-check", (req, res) => {
+  res.json({
+    NODE_ENV: process.env.NODE_ENV,
+    hasJWT_SECRET: !!process.env.JWT_SECRET,
+    hasREFRESH_TOKEN_SECRET: !!process.env.REFRESH_TOKEN_SECRET,
+    hasDATABASE_URL: !!process.env.DATABASE_URL,
+    hasSTRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
+    hasEMAIL_USER: !!process.env.EMAIL_USER,
+    hasEMAIL_PASS: !!process.env.EMAIL_PASS,
+    JWT_SECRET_length: process.env.JWT_SECRET?.length || 0,
+    REFRESH_TOKEN_SECRET_length: process.env.REFRESH_TOKEN_SECRET?.length || 0
+  });
+});
+
 // Test endpoint for debugging login
 app.get("/api/test-user", async (req: express.Request, res: express.Response): Promise<void> => {
   try {
