@@ -1,0 +1,8 @@
+frontend/
+temp-frontend/
+*.md
+*.mp4
+*.bat
+*.ps1
+scripts/
+WebAppDemoMileStone1.mp4
