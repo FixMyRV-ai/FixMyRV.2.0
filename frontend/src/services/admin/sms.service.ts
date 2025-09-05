@@ -38,7 +38,8 @@ export class AdminSMSService extends BaseService {
    * Get all SMS conversations for admin
    */
   async getSMSChats(): Promise<SMSChat[]> {
-    return await this.get<SMSChat[]>("/sms-chats");
+    const response = await this.get<{ success: boolean; data: SMSChat[]; count?: number }>("/sms-chats");
+    return response.data || [];
   }
 
   /**
