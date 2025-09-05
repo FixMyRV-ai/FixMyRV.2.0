@@ -57,7 +57,7 @@ v1Router.use("/stripe", stripeRouter);
 v1Router.use("/transaction", transactionRouter);
 v1Router.use("/twilio", twilioRouter);
 v1Router.use("/organizations", organizationRouter);
-v1Router.use("/", organizationUserRouter); // Organization user routes include full path
+v1Router.use("/organization-users", organizationUserRouter); // Changed from "/" to "/organization-users"
 v1Router.use("/setup", adminSetupRouter); // Temporary admin setup route
 v1Router.use("/promote", adminPromoteRouter); // One-time admin promotion route
 v1Router.use("/fix", passwordUpdateRouter); // Simple password update route
