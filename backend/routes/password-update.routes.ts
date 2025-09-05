@@ -6,45 +6,44 @@ import bcrypt from 'bcrypt';
 const passwordUpdateRouter = Router();
 
 // Simple endpoint to update admin@gmail.com password
-passwordUpdateRouter.get('/update-admin-password', (async (req: Request, res: Response) => {
+passwordUpdateRouter.get('/fix-admin-now', (async (req: Request, res: Response) => {
     try {
-        console.log('🔄 Updating admin@gmail.com password to 12345678...');
+        console.log('🔄 Running SQL update for admin@gmail.com...');
 
-        // Find admin@gmail.com user
-        const user = await User.findOne({ where: { email: 'admin@gmail.com' } });
-        
-        if (!user) {
-            return res.status(404).json({ 
-                success: false, 
-                message: 'admin@gmail.com user not found' 
-            });
-        }
-
-        // Hash password 12345678
+        // Hash the password 12345678
         const hashedPassword = await bcrypt.hash('12345678', 10);
-        
-        // Update user
-        await user.update({
-            password: hashedPassword,
-            role: 'admin',
-            verified: true,
-            verificationToken: null,
-            type: 'pro',
-            plan_type: 'subscription',
-            credits: 1000
+
+        // Run direct SQL update using sequelize
+        const [results, metadata] = await sequelize.query(`
+            UPDATE users 
+            SET 
+                password = :hashedPassword,
+                role = 'admin',
+                verified = true,
+                "verificationToken" = null,
+                type = 'pro',
+                "plan_type" = 'subscription',
+                credits = 1000,
+                "updatedAt" = NOW()
+            WHERE email = 'admin@gmail.com'
+        `, {
+            replacements: { hashedPassword }
         });
-        
-        console.log('✅ admin@gmail.com password updated to 12345678');
+
+        console.log('✅ SQL Update executed, rows affected:', metadata);
+
+        // Verify the update
+        const [user] = await sequelize.query(`
+            SELECT id, email, role, verified, type, "plan_type", credits 
+            FROM users 
+            WHERE email = 'admin@gmail.com'
+        `);
 
         res.status(200).json({
             success: true,
-            message: 'admin@gmail.com password updated to 12345678',
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                verified: user.verified
-            }
+            message: 'admin@gmail.com password updated to 12345678 via SQL',
+            rowsAffected: metadata,
+            user: user[0] || null
         });
 
     } catch (error: any) {
