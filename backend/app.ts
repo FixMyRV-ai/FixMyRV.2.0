@@ -52,10 +52,13 @@ app.get("/assets/logo.png", (req, res) => {
   
   // Try to find the logo in various possible locations
   const possibleLogoPaths = [
+    path.join(__dirname, "uploads/assets/logo.png"),
     path.join(__dirname, "assets/logo.png"),
     path.join(__dirname, "../assets/logo.png"),
     path.join(__dirname, "../frontend/dist/assets/logo.png"),
+    path.join(__dirname, "../frontend/public/assets/logo.png"),
     path.join(__dirname, "../../assets/logo.png"),
+    path.join(process.cwd(), "uploads/assets/logo.png"),
     path.join(process.cwd(), "assets/logo.png"),
     path.join(process.cwd(), "frontend/dist/assets/logo.png"),
     path.join(process.cwd(), "dist/assets/logo.png")
