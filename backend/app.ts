@@ -46,44 +46,43 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Define routes for user and authentication management - MUST BE BEFORE STATIC FILES
 app.use("/uploads", express.static("uploads"));
 
-// DEBUG: Add debugging middleware for asset requests
-app.use("/assets", (req, res, next) => {
-  console.log(`🔍 Asset request: ${req.path}`);
-  console.log(`📁 __dirname: ${__dirname}`);
+// DIRECT ROUTE: Serve logo.png directly to bypass any Railway static file issues
+app.get("/assets/logo.png", (req, res) => {
+  console.log(`�️  Direct logo request from: ${req.ip}`);
   
-  // Try to find assets in various locations
-  const possiblePaths = [
-    path.join(__dirname, "assets", req.path.replace("/assets", "")),
-    path.join(__dirname, "../assets", req.path.replace("/assets", "")),
-    path.join(__dirname, "../frontend/dist/assets", req.path.replace("/assets", "")),
-    path.join(__dirname, "../../assets", req.path.replace("/assets", "")),
-    path.join(process.cwd(), "assets", req.path.replace("/assets", "")),
-    path.join(process.cwd(), "frontend/dist/assets", req.path.replace("/assets", ""))
+  // Try to find the logo in various possible locations
+  const possibleLogoPaths = [
+    path.join(__dirname, "assets/logo.png"),
+    path.join(__dirname, "../assets/logo.png"),
+    path.join(__dirname, "../frontend/dist/assets/logo.png"),
+    path.join(__dirname, "../../assets/logo.png"),
+    path.join(process.cwd(), "assets/logo.png"),
+    path.join(process.cwd(), "frontend/dist/assets/logo.png"),
+    path.join(process.cwd(), "dist/assets/logo.png")
   ];
   
-  console.log(`🔍 Checking paths for ${req.path}:`);
-  possiblePaths.forEach((p, i) => {
+  for (let i = 0; i < possibleLogoPaths.length; i++) {
+    const logoPath = possibleLogoPaths[i];
+    console.log(`🔍 Checking logo path ${i + 1}: ${logoPath}`);
+    
     try {
-      if (fs.existsSync(p)) {
-        console.log(`✅ Found at path ${i + 1}: ${p}`);
-      } else {
-        console.log(`❌ Not found at path ${i + 1}: ${p}`);
+      if (fs.existsSync(logoPath)) {
+        console.log(`✅ Found logo at: ${logoPath}`);
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        return res.sendFile(logoPath);
       }
     } catch (error) {
-      console.log(`❌ Error checking path ${i + 1}: ${p} - ${(error as Error).message}`);
+      console.log(`❌ Error checking logo path: ${(error as Error).message}`);
     }
-  });
+  }
   
-  next();
+  console.log(`❌ Logo not found in any expected location`);
+  res.status(404).json({ error: "Logo not found", checkedPaths: possibleLogoPaths });
 });
 
-// CRITICAL: Serve static assets with correct MIME types BEFORE any catch-all routes
-app.use("/assets", express.static(path.join(__dirname, "assets")));
-app.use("/assets", express.static(path.join(__dirname, "../assets")));
-app.use("/assets", express.static(path.join(__dirname, "../frontend/dist/assets")));
-app.use("/assets", express.static(path.join(__dirname, "../../assets")));
-app.use("/assets", express.static(path.join(process.cwd(), "assets")));
-app.use("/assets", express.static(path.join(process.cwd(), "frontend/dist/assets")));
+// Keep the original static serving as fallback
+app.use("/assets", express.static("uploads")); // Fallback to uploads folder
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
 v1Router.use("/users", userRoutes);
