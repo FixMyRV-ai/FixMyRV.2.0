@@ -322,8 +322,11 @@ const authController = {
     const { email, password }: UserType = req.body;
 
     try {
+      console.log('🔄 Login attempt for:', email);
+      
       // Validate input
       if (!email || !password) {
+        console.log('❌ Missing email or password');
         return res.status(400).json({
           message: "Email and password are required",
         });
@@ -332,6 +335,7 @@ const authController = {
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
+        console.log('❌ Invalid email format');
         return res.status(400).json({
           message: "Invalid email format",
         });
@@ -342,37 +346,45 @@ const authController = {
       });
 
       if (!user) {
+        console.log('❌ User not found');
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
       if (!user.password) {
+        console.log('❌ User has no password');
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
       if (!user.verified) {
+        console.log('❌ User not verified');
         return res.status(403).json({
           message: "Please verify your email before log in",
           needsVerification: true,
         });
       }
 
+      console.log('🔄 Comparing passwords...');
       const isMatch = await bcrypt.compare(
         password as string,
         user.password as string
       );
 
       if (!isMatch) {
+        console.log('❌ Password mismatch');
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
+      console.log('✅ Password match - proceeding with login');
+
       // Check if Stripe customer exists in local DB (only if stripe is configured)
       if (stripe && !user.stripeCustomerId) {
+        console.log('🔄 Creating Stripe customer...');
         // Create new Stripe customer
         const customer = await stripe.customers.create({
           name: `${user.firstName} ${user.lastName}`,
@@ -383,11 +395,15 @@ const authController = {
         await user.update({ stripeCustomerId: customer.id });
         // Refresh user data to get the updated stripeCustomerId
         await user.reload();
+        console.log('✅ Stripe customer created');
       } else if (stripe && user.stripeCustomerId) {
+        console.log('🔄 Verifying existing Stripe customer...');
         // Verify if customer exists on Stripe
         try {
           await stripe.customers.retrieve(user.stripeCustomerId);
+          console.log('✅ Stripe customer verified');
         } catch (error) {
+          console.log('🔄 Recreating Stripe customer...');
           // If customer doesn't exist on Stripe, create a new one
           const customer = await stripe.customers.create({
             name: `${user.firstName} ${user.lastName}`,
@@ -398,9 +414,11 @@ const authController = {
           await user.update({ stripeCustomerId: customer.id });
           // Refresh user data to get the updated stripeCustomerId
           await user.reload();
+          console.log('✅ Stripe customer recreated');
         }
       }
 
+      console.log('🔄 Generating JWT tokens...');
       // Generate access token
       const token = jwt.sign(
         {
@@ -422,6 +440,7 @@ const authController = {
         { expiresIn: "7d" }
       );
 
+      console.log('🔄 Saving refresh token...');
       // Save refresh token to database
       await user.update({ refreshToken });
 
@@ -439,6 +458,7 @@ const authController = {
         type: user.type,
       };
 
+      console.log('✅ Login successful for:', email);
       res.status(200).json({
         message: "Login successful",
         user: userResponse,
