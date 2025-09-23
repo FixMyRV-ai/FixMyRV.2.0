@@ -3,6 +3,7 @@ import { TwilioSetting, TwilioLog } from "../models/index.js";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import twilio from "twilio";
 
 interface TwilioWebhookRequest extends Request {
   body: {
@@ -163,26 +164,12 @@ const logTwilioWebhook = async (
  * @param params - The webhook parameters
  * @returns boolean indicating if signature is valid
  */
-const validateTwilioSignature = (
-  authToken: string,
-  signature: string,
-  url: string,
-  params: Record<string, any>
-): boolean => {
-  // Create the expected signature
-  const data = Object.keys(params)
-    .sort()
-    .reduce((acc, key) => acc + key + params[key], url);
-  
-  const expectedSignature = crypto
-    .createHmac('sha1', authToken)
-    .update(Buffer.from(data, 'utf-8'))
-    .digest('base64');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+const getExternalRequestUrl = (req: Request): string => {
+  // Prefer proxy headers set by Railway/ingress
+  const xfProto = (req.headers['x-forwarded-proto'] as string) || req.protocol;
+  const xfHost = (req.headers['x-forwarded-host'] as string) || req.get('host') || '';
+  // Avoid adding default ports; Twilio signs without :443
+  return `${xfProto}://${xfHost}${req.originalUrl}`;
 };
 
 /**
@@ -198,7 +185,7 @@ export const receiveSmsWebhook = async (
   try {
     const { MessageSid, AccountSid, From, To, Body, NumMedia } = req.body;
     const twilioSignature = req.headers['x-twilio-signature'];
-    const webhookUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+    const webhookUrl = getExternalRequestUrl(req);
 
     console.log('📱 Incoming Twilio SMS webhook:', {
       MessageSid,
@@ -272,13 +259,17 @@ export const receiveSmsWebhook = async (
       return;
     }
 
-    // Validate Twilio signature (skip in development if no signature provided)
-    if (twilioSignature && process.env.NODE_ENV === 'production') {
-      const isValidSignature = validateTwilioSignature(
+    // Validate Twilio signature (can be skipped with SKIP_TWILIO_SIGNATURE=true)
+    if (
+      twilioSignature &&
+      process.env.NODE_ENV === 'production' &&
+      process.env.SKIP_TWILIO_SIGNATURE !== 'true'
+    ) {
+      const isValidSignature = twilio.validateRequest(
         twilioSettings.authToken,
         twilioSignature,
         webhookUrl,
-        req.body
+        req.body as any
       );
 
       if (!isValidSignature) {
@@ -309,7 +300,9 @@ export const receiveSmsWebhook = async (
         return;
       }
     } else if (!twilioSignature) {
-      console.warn('⚠️  No Twilio signature provided (development mode)');
+      console.warn('⚠️  No Twilio signature provided (development/manual test).');
+    } else if (process.env.SKIP_TWILIO_SIGNATURE === 'true') {
+      console.warn('⚠️  SKIP_TWILIO_SIGNATURE=true — bypassing signature validation.');
     }
 
     // Process SMS through SMS Chat Service
@@ -387,7 +380,7 @@ export const receiveSmsWebhook = async (
         req.body?.To || 'UNKNOWN',
         req.body?.Body || '',
         req.body?.NumMedia ? parseInt(req.body.NumMedia) : 0,
-        `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+        getExternalRequestUrl(req as unknown as Request),
         false,
         'error',
         errorMessage,
