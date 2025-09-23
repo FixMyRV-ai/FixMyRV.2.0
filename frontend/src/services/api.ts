@@ -23,9 +23,21 @@ const api = axios.create({
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
-    // Get token from Zustand store or localStorage
-    const state: UserState = JSON.parse(localStorage.getItem("user") || "{}");
-    const token = state?.state?.token;
+    // Get token from stored user or fallback token key
+    const rawUser = localStorage.getItem("user");
+    let token: string | null = null;
+    if (rawUser) {
+      try {
+        const state: UserState = JSON.parse(rawUser);
+        token = state?.state?.token ?? null;
+      } catch (_) {
+        // ignore parse errors
+      }
+    }
+    // Fallback to plain token key
+    if (!token) {
+      token = localStorage.getItem("token");
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

@@ -43,6 +43,7 @@ interface TwilioGeographicData {
 
 /**
  * Logs Twilio webhook to database and file with enhanced geographic data
+ * Note: avoid embedding real-looking Twilio SIDs in comments to satisfy push protection
  */
 const logTwilioWebhook = async (
   messageSid: string,
@@ -304,7 +305,8 @@ export const receiveSmsWebhook = async (
     console.log('🔄 Processing SMS message through chat service...');
     let chatResult;
     try {
-      const smsService = (await import('../services/sms-chat.service')).default;
+  // In Node ESM, compiled JS requires explicit .js extension
+  const smsService = (await import('../services/sms-chat.service.js')).default;
       
       chatResult = await smsService.processIncomingSMS({
         From,
