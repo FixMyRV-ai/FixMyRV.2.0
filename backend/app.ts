@@ -25,6 +25,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// CRITICAL: Trust Railway's proxy to get proper HTTPS URLs for Twilio webhook signatures
+app.set('trust proxy', 1);
+
 app.use(cors()); // Enable CORS for cross-origin requests
 
 // Debug middleware for production
