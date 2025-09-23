@@ -41,6 +41,6 @@ app.get('*', (req, res) => {
   res.sendFile(indexFile);
 });
 
-app.listen(port, () => {
-  console.log(`Express serving dist on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Express serving dist on http://0.0.0.0:${port}`);
 });
