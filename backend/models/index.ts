@@ -19,6 +19,12 @@ console.log("- DB_PORT:", process.env.DB_PORT || "undefined");
 console.log("- DB_USER:", process.env.DB_USER || "undefined");
 console.log("- DB_NAME:", process.env.DB_NAME || "undefined");
 console.log("- NODE_ENV:", process.env.NODE_ENV || "undefined");
+const needSsl = (
+  process.env.DB_SSL === 'true' ||
+  process.env.PGSSLMODE === 'require' ||
+  !!process.env.RAILWAY
+);
+console.log("- DB_SSL enabled:", needSsl);
 
 // Railway-specific database URL check
 const databaseUrl = process.env.DATABASE_URL;
@@ -41,6 +47,7 @@ if (databaseUrl) {
     retry: {
       max: 3,
     },
+    dialectOptions: needSsl ? { ssl: { require: true, rejectUnauthorized: false } } : undefined,
   });
 } else {
   console.log("🔧 Using individual environment variables");
@@ -65,6 +72,7 @@ if (databaseUrl) {
       retry: {
         max: 3,
       },
+      dialectOptions: needSsl ? { ssl: { require: true, rejectUnauthorized: false } } : undefined,
     }
   );
 }
