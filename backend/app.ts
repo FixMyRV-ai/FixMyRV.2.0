@@ -26,8 +26,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Trust Railway/ingress proxies so req.protocol reflects X-Forwarded-Proto (https)
-// This is critical for Twilio signature validation behind a proxy
 app.set('trust proxy', 1);
 
 app.use(cors()); // Enable CORS for cross-origin requests
