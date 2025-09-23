@@ -1,0 +1,6 @@
+# Ignore everything by default
+**/*
+
+# Allow frontend service context files
+!frontend/**
+!README*.md
