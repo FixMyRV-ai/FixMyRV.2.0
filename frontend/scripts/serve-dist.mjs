@@ -83,6 +83,10 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Serving dist on http://0.0.0.0:${port}`);
+server.on('error', (err) => {
+  console.error('Server error:', err);
+});
+
+server.listen(port, () => {
+  console.log(`Serving dist on port ${port}`);
 });
