@@ -1,6 +1,8 @@
 # Ignore everything by default
 **/*
 
-# Allow frontend service context files
+# Allow service contexts
 !frontend/**
+!backend/**
 !README*.md
+!.railwayignore
