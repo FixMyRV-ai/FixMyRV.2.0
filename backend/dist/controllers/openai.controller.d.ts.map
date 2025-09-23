@@ -1,0 +1,1 @@
+{"version":3,"file":"openai.controller.d.ts","sourceRoot":"","sources":["../../controllers/openai.controller.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAO5C,cAAM,gBAAgB;;IAKd,IAAI,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;IAsHhC,iBAAiB,CAAC,MAAM,EAAE,MAAM,EAAE,YAAY,EAAE,GAAG;;;;;;;;;;;;;;;;;;;CAiD1D;;AAED,wBAAsC"}

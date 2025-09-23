@@ -1,5 +1,5 @@
 {
-  "name": "fix-my-rv-bot-backend",
+  "name": "fixmyrv-backend",
   "version": "1.0.0",
   "main": "server.ts",
   "type": "module",

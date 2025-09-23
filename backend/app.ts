@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -25,7 +26,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// CRITICAL: Trust Railway's proxy to get proper HTTPS URLs for Twilio webhook signatures
 app.set('trust proxy', 1);
 
 app.use(cors()); // Enable CORS for cross-origin requests
@@ -47,6 +47,44 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Define routes for user and authentication management - MUST BE BEFORE STATIC FILES
 app.use("/uploads", express.static("uploads"));
+
+// DIRECT ROUTE: Serve logo.png directly to bypass any Railway static file issues
+app.get("/assets/logo.png", (req, res) => {
+  console.log(`�️  Direct logo request from: ${req.ip}`);
+  
+  // Try to find the logo in various possible locations (NO FRONTEND REFERENCES)
+  const possibleLogoPaths = [
+    path.join(__dirname, "uploads/assets/logo.png"),
+    path.join(__dirname, "assets/logo.png"),
+    path.join(__dirname, "../assets/logo.png"),
+    path.join(__dirname, "../../assets/logo.png"),
+    path.join(process.cwd(), "uploads/assets/logo.png"),
+    path.join(process.cwd(), "assets/logo.png"),
+    path.join(process.cwd(), "dist/assets/logo.png")
+  ];
+  
+  for (let i = 0; i < possibleLogoPaths.length; i++) {
+    const logoPath = possibleLogoPaths[i];
+    console.log(`🔍 Checking logo path ${i + 1}: ${logoPath}`);
+    
+    try {
+      if (fs.existsSync(logoPath)) {
+        console.log(`✅ Found logo at: ${logoPath}`);
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        return res.sendFile(logoPath);
+      }
+    } catch (error) {
+      console.log(`❌ Error checking logo path: ${(error as Error).message}`);
+    }
+  }
+  
+  console.log(`❌ Logo not found in any expected location`);
+  res.status(404).json({ error: "Logo not found", checkedPaths: possibleLogoPaths });
+});
+
+// Keep the original static serving as fallback
+app.use("/assets", express.static("uploads")); // Fallback to uploads folder
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
 v1Router.use("/users", userRoutes);
@@ -60,7 +98,7 @@ v1Router.use("/stripe", stripeRouter);
 v1Router.use("/transaction", transactionRouter);
 v1Router.use("/twilio", twilioRouter);
 v1Router.use("/organizations", organizationRouter);
-v1Router.use("/", organizationUserRouter); // Organization user routes include full path
+v1Router.use("/organization-users", organizationUserRouter); // Changed from "/" to "/organization-users"
 v1Router.use("/setup", adminSetupRouter); // Temporary admin setup route
 v1Router.use("/promote", adminPromoteRouter); // One-time admin promotion route
 v1Router.use("/fix", passwordUpdateRouter); // Simple password update route
@@ -74,51 +112,6 @@ app.get("/api/v1/", (req, res) => {
     message: "Backend API is running successfully!",
     database: "Railway PostgreSQL connected"
   });
-});
-
-// Emergency admin password reset - no auth required
-app.get("/api/emergency-admin-reset", async (req, res) => {
-  try {
-    const bcrypt = await import('bcrypt');
-    const { sequelize } = await import('./models/index.js');
-    
-    console.log('🔄 Emergency admin password reset for admin@gmail.com...');
-    
-    // Hash the password 12345678
-    const hashedPassword = await bcrypt.default.hash('12345678', 10);
-    
-    // Run direct SQL update
-    const [results, metadata] = await sequelize.query(`
-        UPDATE users 
-        SET 
-            password = :hashedPassword,
-            role = 'admin',
-            verified = true,
-            "verificationToken" = null,
-            type = 'pro',
-            "plan_type" = 'subscription',
-            credits = 1000,
-            "updatedAt" = NOW()
-        WHERE email = 'admin@gmail.com'
-    `, {
-        replacements: { hashedPassword }
-    });
-    
-    console.log('✅ Emergency reset completed, rows affected:', metadata);
-    
-    res.json({
-        success: true,
-        message: 'admin@gmail.com password reset to 12345678',
-        rowsAffected: metadata
-    });
-    
-  } catch (error) {
-    console.error('❌ Emergency reset failed:', error);
-    res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-    });
-  }
 });
 
 // REMOVED ALL FRONTEND STATIC FILE SERVING

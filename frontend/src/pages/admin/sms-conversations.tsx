@@ -51,9 +51,12 @@ const SMSConversations = () => {
       // Fetch SMS conversations from admin API using service
       const data = await adminSMSService.getSMSChats();
       console.log('SMS Chats received:', data);
-      setSmsChats(data);
+      // Ensure data is always an array
+      setSmsChats(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching SMS chats:', error);
+      // Set to empty array on error to prevent map errors
+      setSmsChats([]);
       Helpers.toast("error", "Failed to load SMS conversations");
     } finally {
       setLoading(false);
@@ -78,7 +81,7 @@ const SMSConversations = () => {
         <MessageSquare className="w-6 h-6 text-primary" />
         <h1 className="text-2xl font-bold">SMS Conversations</h1>
         <Badge variant="outline" className="ml-auto">
-          {smsChats.length} conversations
+          {(smsChats || []).length} conversations
         </Badge>
       </div>
 
@@ -95,12 +98,12 @@ const SMSConversations = () => {
                   <div className="p-4 text-center text-muted-foreground">
                     Loading conversations...
                   </div>
-                ) : smsChats.length === 0 ? (
+                ) : (smsChats || []).length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     No SMS conversations yet
                   </div>
                 ) : (
-                  smsChats.map((chat) => (
+                  (smsChats || []).map((chat) => (
                     <div
                       key={chat.id}
                       className={`p-3 border-b cursor-pointer hover:bg-muted/50 transition-colors ${
@@ -184,7 +187,7 @@ const SMSConversations = () => {
               {selectedChat ? (
                 <ScrollArea className="h-[600px] p-4">
                   <div className="space-y-4">
-                    {selectedChat.messages.map((message) => (
+                    {(selectedChat.messages || []).map((message) => (
                       <div
                         key={message.id}
                         className={`flex ${message.is_bot ? 'justify-start' : 'justify-end'}`}

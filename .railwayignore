@@ -1,8 +1,13 @@
-# Ignore everything by default
-**/*
+frontend/
+temp-frontend/
+*.md
+*.mp4
+*.bat
+*.ps1
+scripts/
+WebAppDemoMileStone1.mp4
+*.html
+**/index.html
+**/dist/
+node_modules/
 
-# Allow frontend and backend contexts (user request)
-!frontend/**
-!backend/**
-!README*.md
-!.railwayignore
