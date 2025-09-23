@@ -191,7 +191,7 @@ const validateTwilioSignature = (
  */
 export const receiveSmsWebhook = async (
   req: TwilioWebhookRequest,
-  res: Response<TwilioWebhookResponse>
+  res: Response
 ): Promise<void> => {
   const startTime = Date.now();
   
@@ -232,11 +232,7 @@ export const receiveSmsWebhook = async (
         req.body
       );
       
-      res.status(500).json({
-        success: false,
-        message: errorMsg,
-        error: 'No Twilio configuration found'
-      });
+      res.status(500).send('Twilio not configured');
       return;
     }
 
@@ -264,11 +260,7 @@ export const receiveSmsWebhook = async (
         req.body
       );
       
-      res.status(403).json({
-        success: false,
-        message: 'Invalid AccountSid',
-        error: errorMsg
-      });
+      res.status(403).send('Invalid AccountSid');
       return;
     }
 
@@ -301,11 +293,7 @@ export const receiveSmsWebhook = async (
           req.body
         );
         
-        res.status(403).json({
-          success: false,
-          message: 'Invalid signature',
-          error: errorMsg
-        });
+        res.status(403).send('Invalid signature');
         return;
       }
     } else if (!twilioSignature) {
@@ -360,17 +348,8 @@ export const receiveSmsWebhook = async (
 
     console.log('✅ SMS processed successfully in', processingTime, 'ms');
 
-    // Respond to Twilio (empty response means "message received")
-    res.status(200).json({
-      success: true,
-      message: 'SMS received and processed',
-      data: {
-        messageSid: MessageSid,
-        processed: true,
-        timestamp: new Date().toISOString(),
-        processingTimeMs: processingTime
-      }
-    });
+    // Respond to Twilio with empty 200 response (standard for SMS webhooks)
+    res.status(200).send();
 
   } catch (error) {
     const processingTime = Date.now() - startTime;
@@ -398,11 +377,8 @@ export const receiveSmsWebhook = async (
       console.error('❌ Failed to log error:', logError);
     }
     
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: errorMessage
-    });
+    // Respond with plain text error (Twilio doesn't like JSON responses)
+    res.status(500).send('Internal server error');
   }
 };
 
