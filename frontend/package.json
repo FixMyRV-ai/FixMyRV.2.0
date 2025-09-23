@@ -8,8 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prestart": "npm run build",
-    "start": "node scripts/start-preview.mjs"
+    "start": "node scripts/serve-dist.mjs"
   },
   "engines": {
     "node": ">=18"
