@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 
 class Helpers {
   static localhost: string = "http://localhost:3000";
-  static server: string = "https://backend-development-cf06.up.railway.app";
-  
+  static server: string = "https://fixmyrvai-api-dev.up.railway.app";
+
   // For local development, use localhost. For production, use server
   // Railway deployment update - force rebuild
   // Add fallback to prevent undefined errors
@@ -17,7 +17,7 @@ class Helpers {
       return Helpers.localhost;
     }
   })();
-  
+
   static apiUrl: string = `${Helpers.basePath}/api/v1`;
 
   static authUser = (): Record<string, unknown> => {
