@@ -9,6 +9,7 @@ const __dirname = path.dirname(__filename);
 
 const port = Number(process.env.PORT || 4173);
 const root = path.resolve(__dirname, '..', 'dist');
+const indexFile = path.join(root, 'index.html');
 
 const mime = {
   '.html': 'text/html; charset=utf-8',
@@ -26,32 +27,60 @@ const mime = {
   '.ttf': 'font/ttf',
 };
 
+// Ensure dist exists
+if (!fs.existsSync(indexFile)) {
+  console.error('Error: dist/index.html not found. Did the build step run?');
+}
+
 const server = http.createServer((req, res) => {
-  // Normalize and prevent path traversal
-  const safeUrl = decodeURI((req.url || '/')).split('?')[0];
-  let filePath = path.join(root, safeUrl);
+  try {
+    const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+    const pathname = decodeURI(requestUrl.pathname);
 
-  // If directory requested, serve index.html
-  if (safeUrl.endsWith('/')) {
-    filePath = path.join(root, 'index.html');
-  }
+    // Health endpoint to debug deploy state
+    if (pathname === '/__health') {
+      const hasIndex = fs.existsSync(indexFile);
+      const payload = JSON.stringify({ ok: true, hasDist: hasIndex, port });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(payload);
+    }
 
-  // If file does not exist, serve SPA fallback index.html
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(root, 'index.html');
-  }
+    // Normalize and prevent path traversal
+    const resolvedPath = path.normalize(path.join(root, pathname));
+    if (!resolvedPath.startsWith(root)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      return res.end('Forbidden');
+    }
 
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('Internal Server Error');
+    const hasExt = path.extname(pathname) !== '';
+
+    if (!hasExt || pathname.endsWith('/')) {
+      // Route navigation -> serve SPA index
+      fs.readFile(indexFile, (err, data) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          return res.end('Internal Server Error');
+        }
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end(data);
+      });
       return;
     }
 
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream' });
-    res.end(data);
-  });
+    // Static asset request
+    fs.readFile(resolvedPath, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('Not Found');
+      }
+      const ext = path.extname(resolvedPath).toLowerCase();
+      res.writeHead(200, { 'Content-Type': mime[ext] || 'application/octet-stream' });
+      return res.end(data);
+    });
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    return res.end('Internal Server Error');
+  }
 });
 
 server.listen(port, '0.0.0.0', () => {
