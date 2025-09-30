@@ -1,4 +1,4 @@
-import nodemailer, { TransportOptions } from "nodemailer";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -8,15 +8,31 @@ class EmailService {
   private transporter: nodemailer.Transporter;
 
   private constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: Number(process.env.MAIL_PORT),
-      secure: false,
-      auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    } as TransportOptions);
+    const postmarkToken = process.env.POSTMARK_TOKEN;
+    const fromEmail = process.env.EMAIL_FROM || "noreply@fixmyrv.com";
+
+    if (!postmarkToken) {
+      console.warn(
+        "⚠️  POSTMARK_TOKEN not configured - email features will be disabled"
+      );
+      // Create a dummy transporter that logs instead of sending
+      this.transporter = nodemailer.createTransport({
+        streamTransport: true,
+        newline: "unix",
+        buffer: true,
+      });
+    } else {
+      // Use Postmark SMTP
+      this.transporter = nodemailer.createTransport({
+        host: "smtp.postmarkapp.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: postmarkToken,
+          pass: postmarkToken,
+        },
+      });
+    }
   }
 
   public static getInstance(): EmailService {
@@ -32,15 +48,17 @@ class EmailService {
     html: string
   ): Promise<void> {
     try {
+      const fromEmail = process.env.EMAIL_FROM || "noreply@fixmyrv.com";
+
       await this.transporter.sendMail({
-        from: process.env.MAIL_FROM_ADDRESS,
+        from: fromEmail,
         to,
         subject,
         html,
       });
-      console.log("Email sent successfully");
+      console.log(`✅ Email sent successfully to ${to}`);
     } catch (error: any) {
-      console.error("Error sending email:", error);
+      console.error("❌ Error sending email:", error);
       throw new Error(`Error sending email: ${error.message}`);
     }
   }

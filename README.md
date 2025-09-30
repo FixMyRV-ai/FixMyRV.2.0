@@ -1,225 +1,554 @@
 # FixMyRV - AI-Powered RV Assistant
 
-**German Clock Precision Development Environment** ⏰  
-**Production Status**: ✅ **FULLY OPERATIONAL** (September 2025)
+> **Full-stack AI application** providing intelligent RV troubleshooting, maintenance guidance, SMS communication, and organization management.
 
-Full-stack application providing intelligent RV troubleshooting, maintenance guidance, SMS communication, and organization management through advanced AI integration.
+**Production URL**: [https://fixmyrv-v2.up.railway.app](https://fixmyrv-v2.up.railway.app)
 
-## 🎉 **Latest Production Updates - September 2025**
+---
 
-### **✅ Complete Deployment Resolution**
-- **TypeScript Build Issues**: Fixed decorator configurations and ES module compatibility
-- **Database Connection**: Implemented Railway-specific connection handling with retry logic
-- **Error Handling**: Enhanced logging and debugging for production troubleshooting
-- **API Stability**: Resolved void function return type issues in controllers
+## 📋 Table of Contents
 
-### **✅ SMS System Integration Complete**
-- **Organizations Management**: Full CRUD operations for RV service organizations
-- **User Management**: Organization-based user system with role management  
-- **SMS Communication**: Two-way SMS conversations via Twilio integration
-- **Admin Interface**: Complete admin dashboard for managing organizations and SMS
-- **Database Auto-Setup**: Automatic table creation and default data insertion
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Environment Variables](#-environment-variables)
+- [Key Features](#-key-features)
+- [Development](#-development)
+- [Deployment](#-deployment)
+- [Project Structure](#-project-structure)
 
-### **✅ Production Deployment Features**
-- **Railway Integration**: Full support for Railway's DATABASE_URL and environment variables
-- **Connection Resilience**: 3-attempt retry logic with 5-second delays for database connections
-- **Comprehensive Logging**: Detailed connection status and error reporting
-- **Automatic Recovery**: Fallback table creation when Sequelize sync fails
+---
 
-### **✅ Current Production Environment**
-- **URL**: `https://fixmyrv-v2.up.railway.app`
-- **Platform**: Railway (PostgreSQL + Node.js)
-- **Status**: All systems operational with enhanced error handling
-- **Features**: AI Chat, Document Management, SMS System, Organization Management
+## 🚀 Quick Start
 
-## 🚀 One-Command Setup
+### Prerequisites
+
+- **Node.js**: ≥18.0.0
+- **npm**: ≥8.0.0
+- **Docker**: For local PostgreSQL database
+- **PowerShell**: For Windows development scripts
+
+### One-Command Setup
 
 ```powershell
-# Navigate to scripts and run intelligent start
+# Navigate to scripts directory
 cd scripts
+
+# Run intelligent start script
 .\intelligent-start.ps1
 ```
 
-**Everything auto-configures!** No manual setup required.
+**What this does:**
+
+- ✅ Starts Docker services (PostgreSQL + Mailcatcher)
+- ✅ Installs all dependencies
+- ✅ Initializes database with pgvector extension
+- ✅ Starts backend API server (port 3000)
+- ✅ Starts frontend dev server (port 5173)
+- ✅ Validates all services are healthy
+
+### Manual Setup
+
+```bash
+# 1. Start Docker services
+docker-compose up -d
+
+# 2. Install backend dependencies
+cd backend
+npm install
+
+# 3. Create backend .env file (see Environment Variables section)
+cp env.template .env  # Edit with your values
+
+# 4. Start backend server
+npm run dev
+
+# 5. In a new terminal, start frontend
+cd frontend
+npm install
+npm run dev
+```
+
+### Access Points
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3000
+- **Database**: localhost:5433 (PostgreSQL)
+- **Email Testing**: http://localhost:1081 (Mailcatcher)
+
+### Create Admin User
+
+**Option 1: Automatic (Recommended)**
+Just register with email `admin@gmail.com` - it's **automatically promoted** to admin with full privileges!
+
+**Option 2: Manual Seeding**
+
+```bash
+cd backend
+tsx seed-database.ts
+# Creates: admin@fixmyrv.com / admin123
+```
+
+**Option 3: SQL Script**
+
+```bash
+psql -h localhost -p 5433 -U postgres -d fixmyrv -f backend/seed-admin.sql
+```
+
+---
 
 ## 🏗️ Architecture
 
-### **Frontend (React + Vite + TypeScript)**
-- **Port**: 5173
-- **Framework**: React 18 with Vite
+### Frontend
+
+- **Framework**: React 19 + TypeScript
+- **Build Tool**: Vite
 - **Styling**: Tailwind CSS + Radix UI
-- **Features**: Real-time AI chat, document upload, payment processing
+- **State Management**: Redux Toolkit
+- **Port**: 5173 (dev), configurable (prod)
 
-### **Backend (Node.js + Express + TypeScript)**
-- **Port**: 3000  
-- **Database**: PostgreSQL with pgvector extension
-- **AI**: OpenAI GPT-4 + embeddings for intelligent responses
-- **Features**: Vector search, document processing, SMS integration
+### Backend
 
-### **Services (Docker)**
-- **PostgreSQL**: pgvector/pgvector:pg15 (Port: 5433)
-- **Mailcatcher**: Development email testing (Port: 1081)
+- **Runtime**: Node.js + Express + TypeScript
+- **Database**: PostgreSQL 15 with pgvector extension
+- **ORM**: Sequelize
+- **AI**: OpenAI GPT-4 + LangChain
+- **Port**: 3000
+
+### Database
+
+- **Engine**: PostgreSQL 15
+- **Extensions**: pgvector (for vector embeddings)
+- **Local**: Docker container (port 5433)
+- **Production**: Railway managed PostgreSQL
+
+---
+
+## 🔐 Environment Variables
+
+### Backend Required Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```bash
+# ============================================
+# DATABASE CONFIGURATION
+# ============================================
+# Railway provides DATABASE_URL automatically - that's all you need!
+DATABASE_URL=postgresql://user:password@host:port/database
+
+# For local development with Docker, use individual vars:
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=fixmyrv
+
+# ============================================
+# AUTHENTICATION (REQUIRED)
+# ============================================
+# JWT Secret for user authentication
+# Generate: openssl rand -base64 32
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+
+# ============================================
+# OPENAI (REQUIRED)
+# ============================================
+# OpenAI API Key for AI chat features
+OPENAI_API_KEY=sk-proj-your-openai-api-key-here
+
+# ============================================
+# STRIPE PAYMENT (OPTIONAL)
+# ============================================
+# If not provided, payment features will be gracefully disabled
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret-key
+STRIPE_WEBHOOK_SECRET=whsec_your-stripe-webhook-secret
+
+# Web URL for payment redirects and email links
+WEB_URL=http://localhost:5173
+
+# ============================================
+# TWILIO SMS (OPTIONAL)
+# ============================================
+# Twilio credentials configured via admin panel (stored in database)
+# Only needed for local testing without real webhooks:
+SKIP_TWILIO_SIGNATURE=true
+
+# ============================================
+# EMAIL (OPTIONAL)
+# ============================================
+# Postmark API token for sending emails
+# Get your token: https://postmarkapp.com
+POSTMARK_TOKEN=your-postmark-server-token
+EMAIL_FROM=noreply@fixmyrv.com
+
+# ============================================
+# SERVER CONFIGURATION
+# ============================================
+PORT=3000
+NODE_ENV=development      # 'development' or 'production'
+```
+
+### Frontend Configuration
+
+**No `.env` file needed!** The frontend automatically detects the environment:
+
+- **Development** (when running `npm run dev`): Uses `http://localhost:3000`
+- **Production** (when built): Uses `https://fixmyrvai-api-dev.up.railway.app`
+
+To change backend URLs, edit `frontend/src/config/helpers.tsx`:
+
+```typescript
+static localhost: string = "http://localhost:3000";
+static server: string = "https://your-production-api-url.com";
+```
+
+### Environment Variable Quick Reference
+
+| Variable                | Required      | Description                                    | Default               |
+| ----------------------- | ------------- | ---------------------------------------------- | --------------------- |
+| `JWT_SECRET`            | ✅ Yes        | JWT authentication secret                      | -                     |
+| `OPENAI_API_KEY`        | ✅ Yes        | OpenAI API key for AI features                 | -                     |
+| `DATABASE_URL`          | ✅ Production | Full PostgreSQL connection string (Railway)    | -                     |
+| `DB_HOST`               | ✅ Local      | Database host (if not using DATABASE_URL)      | localhost             |
+| `DB_PORT`               | ✅ Local      | Database port (if not using DATABASE_URL)      | 5433                  |
+| `DB_USER`               | ✅ Local      | Database user (if not using DATABASE_URL)      | postgres              |
+| `DB_PASSWORD`           | ✅ Local      | Database password (if not using DATABASE_URL)  | postgres              |
+| `DB_NAME`               | ✅ Local      | Database name (if not using DATABASE_URL)      | fixmyrv               |
+| `STRIPE_SECRET_KEY`     | ❌ Optional   | Stripe API key for payments                    | -                     |
+| `STRIPE_WEBHOOK_SECRET` | ❌ Optional   | Stripe webhook signature secret                | -                     |
+| `WEB_URL`               | ❌ Optional   | Web URL for payment redirects and emails       | http://localhost:5173 |
+| `SKIP_TWILIO_SIGNATURE` | ❌ Optional   | Skip Twilio webhook signature validation (dev) | false                 |
+| `POSTMARK_TOKEN`        | ❌ Optional   | Postmark API token for sending emails          | -                     |
+| `EMAIL_FROM`            | ❌ Optional   | From email address                             | noreply@fixmyrv.com   |
+| `PORT`                  | ❌ Optional   | Backend server port                            | 3000                  |
+| `NODE_ENV`              | ❌ Optional   | Environment mode (development/production)      | development           |
+
+### Generating JWT Secret
+
+```bash
+openssl rand -base64 32
+```
+
+---
 
 ## 💡 Key Features
 
-### **AI-Powered Chat**
-- GPT-4 integration for intelligent RV troubleshooting
-- Vector-based document search and retrieval
-- Contextual responses based on uploaded manuals
+### 🤖 AI-Powered Chat
 
-### **Document Management**
-- PDF upload and processing with text extraction
+- GPT-4 integration for intelligent RV troubleshooting
+- Vector-based document search using pgvector
+- Contextual responses based on uploaded manuals and documents
+- Real-time streaming responses
+
+### 📄 Document Management
+
+- PDF upload and automatic text extraction
 - Web scraping for external RV resources
 - Google Drive integration for manual storage
+- Vector embeddings for semantic search
 
-### **Payment Integration**
-- Stripe integration for subscription plans
+### 💳 Payment Integration
+
+- Stripe subscription and one-time payment support
 - Transaction management and reporting
-- Graceful fallback when payment not configured
+- Graceful fallback when payment is not configured
+- Customer portal for subscription management
 
-### **SMS & Organization Management**
-- **Organization System**: Multi-tenant organization structure
-- **User Management**: Role-based access control within organizations
-- **SMS Communication**: Two-way SMS via Twilio integration
-- **Admin Dashboard**: Complete management interface for organizations and SMS conversations
-- **Real-time Messaging**: SMS conversations with context and history
+### 📱 SMS & Organization Management
 
-### **Production Database & Deployment**
-- **Development**: PostgreSQL with Docker (pgvector extension)
-- **Production**: Railway managed PostgreSQL with automatic deployments
-- **Schema**: Fully synchronized between environments with auto-creation fallbacks
-- **Features**: Vector search, SMS logs, organization data, user management
-- **Resilience**: Connection retry logic, automatic table creation, comprehensive error handling
+- Multi-tenant organization structure
+- Two-way SMS conversations via Twilio
+- Role-based access control within organizations
+- Admin dashboard for managing SMS conversations
+- Real-time messaging with chat history
 
-## 🔧 **Recent Technical Improvements (September 2025)**
+### 🗄️ Production-Ready Database
 
-### **Deployment & Build System**
-- **TypeScript Configuration**: Fixed decorator support with `useDefineForClassFields: false`
-- **ES Module Compatibility**: All imports updated with `.js` extensions for production
-- **Build Process**: Resolved all compilation errors for successful Railway deployment
-- **Module Resolution**: Enhanced support for ES modules with proper synthetic default imports
+- PostgreSQL with pgvector extension for AI embeddings
+- Automatic table creation and migrations
+- Connection retry logic with exponential backoff
+- Synchronized schemas between dev and production
+- Comprehensive error handling and logging
 
-### **Database Connection Resilience** 
-- **Railway Integration**: Full support for `DATABASE_URL` connection strings
-- **Retry Logic**: 3-attempt connection retry with exponential backoff
-- **Error Handling**: Comprehensive connection error reporting and debugging
-- **Fallback Systems**: Manual table creation when Sequelize sync fails
-- **Environment Detection**: Automatic detection of Railway vs local development
+---
 
-### **Production Error Handling**
-- **Void Function Fixes**: Resolved TypeScript return type issues in controllers
-- **Enhanced Logging**: Detailed database connection status and error reporting  
-- **Graceful Degradation**: SMS system continues working even with partial database issues
-- **Debug Information**: Comprehensive error context for production troubleshooting
+## 🛠️ Development
 
-### **API & Controller Improvements**
-- **Admin Chat Controller**: Enhanced SMS conversation handling with detailed error reporting
-- **Database Initialization**: Automatic creation of organizations, users, chats, and messages tables
-- **Default Data**: Automatic insertion of default organization and admin user
-- **Connection Monitoring**: Real-time database status reporting during startup
-
-### **Communication**
-- Twilio SMS integration for notifications
-- Email system with development testing
-- Real-time webhook processing
-
-## 📁 Project Structure
-
-```
-WebApp/
-├── scripts/
-│   ├── intelligent-start.ps1    # German clock precision startup
-│   ├── intelligent-stop.ps1     # Graceful shutdown
-│   └── [other utilities]
-├── backend/
-│   ├── controllers/             # API endpoints
-│   ├── models/                  # Database models
-│   ├── routes/                  # Route definitions  
-│   ├── services/                # Business logic
-│   ├── config/                  # Configuration files
-│   └── .env                     # Environment variables
-├── frontend/
-│   ├── src/                     # React application
-│   ├── public/                  # Static assets
-│   └── package.json             # Frontend dependencies
-└── docker-compose.yml           # Local services
-```
-
-## 🎯 Quick Commands
+### Development Commands
 
 ```powershell
 # Start everything (recommended)
+cd scripts
 .\intelligent-start.ps1
 
 # Stop gracefully
 .\intelligent-stop.ps1
 
-# Force cleanup
+# Force cleanup and stop
 .\intelligent-stop.ps1 -Force
 
-# Skip dependencies (faster restart)
+# Skip dependency installation (faster restart)
 .\intelligent-start.ps1 -SkipDependencies
 ```
 
-## 🔐 Configuration
+### Manual Development Commands
 
-### **Required Environment Variables**
 ```bash
-# OpenAI (Required for AI features)
-OPENAI_API_KEY=your-openai-api-key
+# Backend
+cd backend
+npm run dev          # Start with hot reload
+npm run build        # Build for production
+npm start            # Start production build
 
-# Database (Auto-configured for local)
-DB_HOST=localhost
-DB_PORT=5433
-DB_NAME=fixmyrv
+# Frontend
+cd frontend
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run preview      # Preview production build
 
-# Optional Integrations
-STRIPE_SECRET_KEY=your-stripe-key
-TWILIO_ACCOUNT_SID=your-twilio-sid
+# Docker Services
+docker-compose up -d          # Start services
+docker-compose down           # Stop services
+docker-compose down -v        # Stop and remove volumes
 ```
 
-### **Development URLs**
-- **Application**: http://localhost:5173
-- **API**: http://localhost:3000
-- **Database**: localhost:5433
-- **Email Testing**: http://localhost:1081
+### Database Management
+
+```bash
+# Access PostgreSQL CLI
+docker exec -it fixmyrv-postgres psql -U postgres -d fixmyrv
+
+# View tables
+\dt
+
+# Check pgvector extension
+\dx
+
+# Seed admin user and settings
+cd backend
+tsx seed-database.ts
+```
+
+### Admin Panel Access
+
+After creating an admin user, login and access:
+
+- **User Management**: Manage registered users
+- **Organization Management**: Create and manage RV service organizations
+- **SMS Conversations**: View and manage two-way SMS chats
+- **Twilio Configuration**: Set Account SID, Auth Token, and Phone Number
+- **System Settings**: Configure OpenAI and other integrations
+
+### Testing SMS Webhooks
+
+```bash
+# Use the test endpoint (no signature validation)
+POST http://localhost:3000/api/v1/twilio/test/sms
+Content-Type: application/json
+
+{
+  "from": "+1234567890",
+  "to": "+1987654321",
+  "body": "Test message"
+}
+```
+
+---
 
 ## 🚀 Deployment
 
-### **Railway Cloud (Automatic)**
-1. Push to main branch
-2. Railway auto-builds and deploys
-3. Environment variables managed in Railway dashboard
-4. Production URLs automatically configured
+### Railway (Recommended)
 
-### **Local to Railway Setup**
-- Environment detection automatically handles configuration
-- Local uses Docker services (port 5433)
-- Railway uses managed PostgreSQL
-- No manual intervention required
+The application is configured for automatic Railway deployment.
 
-## 🎪 Smart Features
+**Backend Setup:**
 
-### **German Clock Precision**
-- ✅ **Zero-configuration startup**
-- ✅ **Automatic dependency management**
-- ✅ **Environment detection and adaptation**
-- ✅ **Health monitoring and validation**
-- ✅ **Graceful error handling and recovery**
-- ✅ **Desktop shortcuts and convenience tools**
+1. Create new Railway project
+2. Add PostgreSQL service
+3. Add Node.js service (backend)
+4. Set environment variables in Railway dashboard (see Environment Variables section)
+5. Configure build command: `npm run build`
+6. Configure start command: `npm start`
+7. Railway automatically detects `DATABASE_URL` from PostgreSQL service
 
-The intelligent scripts ensure that reopening the project never requires re-iteration of setup steps. Everything "just works" like a German clock! ⏰
+**Frontend Setup (if deploying separately):**
 
-## 🛠️ Development Notes
+1. Add another Node.js service (frontend)
+2. Configure build command: `npm run build`
+3. Configure start command: `npm start`
+4. Update `frontend/src/config/helpers.tsx` with backend URL
 
-### **Railway Compatibility**
-- Backend builds with `tsc` for Railway deployment
-- Frontend builds with `npm run build`
-- Environment variables automatically switch based on context
-- Database migrations handle both local and cloud PostgreSQL
+**Required Railway Environment Variables:**
 
-### **Troubleshooting**
-- All services health-checked before startup completion
-- Detailed logging for debugging issues
-- Graceful fallbacks for missing optional services
-- Desktop shortcuts for quick access
+```bash
+# Railway auto-provides DATABASE_URL - you just need these:
+JWT_SECRET=your-jwt-secret
+OPENAI_API_KEY=your-openai-key
+NODE_ENV=production
+
+# Optional: Stripe (if using payments)
+STRIPE_SECRET_KEY=your-stripe-key
+STRIPE_WEBHOOK_SECRET=your-webhook-secret
+WEB_URL=https://your-frontend-url.com
+
+# Optional: Email (Postmark)
+POSTMARK_TOKEN=your-postmark-token
+EMAIL_FROM=support@fixmyrv.com
+```
+
+That's it! Railway handles database config automatically.
+
+### Manual Deployment
+
+```bash
+# Build backend
+cd backend
+npm install --production
+npm run build
+
+# Build frontend
+cd frontend
+npm install --production
+npm run build
+
+# Start backend (requires PostgreSQL connection)
+cd backend
+npm start
+```
+
+---
+
+## 📁 Project Structure
+
+```
+FixMyRV.2.0/
+├── backend/                      # Backend API server
+│   ├── config/                   # Database and configuration
+│   │   ├── database.ts          # Sequelize database setup
+│   │   ├── initDatabase.ts      # Database initialization with retry logic
+│   │   └── sync.ts              # Database synchronization
+│   ├── controllers/             # API endpoint controllers
+│   │   ├── auth.controller.ts   # Authentication endpoints
+│   │   ├── chat.controller.ts   # Chat management
+│   │   ├── openai.controller.ts # AI chat processing
+│   │   ├── twilio.controller.ts # SMS webhook handling
+│   │   ├── stripe.controller.ts # Payment processing
+│   │   └── ...
+│   ├── models/                  # Database models (Sequelize)
+│   │   ├── user.ts
+│   │   ├── chat.ts
+│   │   ├── message.ts
+│   │   ├── organization.ts
+│   │   └── ...
+│   ├── routes/                  # Express route definitions
+│   ├── services/                # Business logic services
+│   │   ├── email.service.ts
+│   │   ├── sms-chat.service.ts
+│   │   └── ...
+│   ├── middlewares/             # Express middlewares
+│   │   ├── auth.middleware.ts   # JWT authentication
+│   │   └── upload.middleware.ts # File upload handling
+│   ├── utils/                   # Utility functions
+│   ├── migrations/              # SQL migration files
+│   ├── .env                     # Environment variables (create this)
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── server.ts               # Application entry point
+│
+├── frontend/                    # React frontend application
+│   ├── src/
+│   │   ├── components/         # React components
+│   │   ├── pages/              # Page components
+│   │   ├── config/             # Configuration
+│   │   │   └── helpers.tsx     # API endpoints & utilities
+│   │   ├── store/              # Redux store
+│   │   ├── hooks/              # Custom React hooks
+│   │   └── App.tsx             # Root component
+│   ├── public/                 # Static assets
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── scripts/                     # PowerShell automation scripts
+│   ├── intelligent-start.ps1   # One-command startup
+│   ├── intelligent-stop.ps1    # Graceful shutdown
+│   └── ...
+│
+├── docker-compose.yml          # Local development services
+├── package.json                # Root package.json
+└── README.md                   # This file
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Database connection fails:**
+
+```bash
+# Check if PostgreSQL is running
+docker ps
+
+# Restart Docker services
+docker-compose down
+docker-compose up -d
+
+# Check logs
+docker logs fixmyrv-postgres
+```
+
+**Frontend can't connect to backend:**
+
+- Verify backend is running on port 3000
+- Check `frontend/src/config/helpers.tsx` for correct API URL
+- Check for CORS errors in browser console
+
+**OpenAI API errors:**
+
+- Verify `OPENAI_API_KEY` is set correctly in backend `.env`
+- Check OpenAI account has sufficient credits
+- Check OpenAI API status: https://status.openai.com
+
+**Twilio webhook not working:**
+
+- For local testing, set `SKIP_TWILIO_SIGNATURE=true`
+- For production, ensure webhook URL is `https://your-domain.com/api/v1/twilio/webhook/sms`
+- Configure Twilio credentials in admin panel
+- Check webhook logs: `GET /api/v1/twilio/logs`
+
+**Payment/Stripe issues:**
+
+- Stripe features are optional - app works without them
+- Set `STRIPE_SECRET_KEY` only if using payment features
+- Check webhook endpoint matches Stripe dashboard configuration
+
+---
+
+## 📝 License
+
+MIT License - See LICENSE file for details
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📧 Support
+
+For issues and questions:
+
+- Open a GitHub issue
+- Check PowerShell scripts in `/scripts/` for automation tools
+- Review code comments for implementation details
+
+---
+
+**Built with ❤️ for the RV community**

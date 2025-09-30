@@ -15,7 +15,7 @@ type UserModel = UserType & SequelizeModel;
 import Stripe from "stripe";
 
 // Initialize Stripe only if API key is available
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
   : null;
 
@@ -24,8 +24,14 @@ dotenv.config();
 const authController = {
   async sendConfirmationEmail(user: any) {
     // Check if email configuration is available
-    if (!process.env.MAIL_HOST || !process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
-      console.warn("⚠️ Email configuration not found, skipping confirmation email");
+    if (
+      !process.env.MAIL_HOST ||
+      !process.env.MAIL_USERNAME ||
+      !process.env.MAIL_PASSWORD
+    ) {
+      console.warn(
+        "⚠️ Email configuration not found, skipping confirmation email"
+      );
       // Still set verification token for manual verification if needed
       const token = String(crypto.randomBytes(32).toString("hex"));
       user.verificationToken = token;
@@ -212,15 +218,15 @@ const authController = {
       });
 
       // Special case: Auto-promote admin@gmail.com to admin status
-      if (email === 'admin@gmail.com') {
+      if (email === "admin@gmail.com") {
         await newUser.update({
-          role: 'admin',
+          role: "admin",
           verified: true,
-          type: 'pro',
-          plan_type: 'subscription',
-          credits: 1000
+          type: "pro",
+          plan_type: "subscription",
+          credits: 1000,
         });
-        console.log('🔑 Auto-promoted admin@gmail.com to admin status');
+        console.log("🔑 Auto-promoted admin@gmail.com to admin status");
       }
 
       // create stripe customer id (only if stripe is configured)
@@ -311,7 +317,7 @@ const authController = {
         verified: true,
         verificationToken: null,
       });
-      res.redirect(`${process.env.FRONTEND_URL}/login`);
+      res.redirect(`${process.env.WEB_URL}/login`);
     } catch (error) {
       console.error("Error verifying email:", error);
       next(error);
@@ -322,11 +328,11 @@ const authController = {
     const { email, password }: UserType = req.body;
 
     try {
-      console.log('🔄 Login attempt for:', email);
-      
+      console.log("🔄 Login attempt for:", email);
+
       // Validate input
       if (!email || !password) {
-        console.log('❌ Missing email or password');
+        console.log("❌ Missing email or password");
         return res.status(400).json({
           message: "Email and password are required",
         });
@@ -335,7 +341,7 @@ const authController = {
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        console.log('❌ Invalid email format');
+        console.log("❌ Invalid email format");
         return res.status(400).json({
           message: "Invalid email format",
         });
@@ -346,45 +352,45 @@ const authController = {
       });
 
       if (!user) {
-        console.log('❌ User not found');
+        console.log("❌ User not found");
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
       if (!user.password) {
-        console.log('❌ User has no password');
+        console.log("❌ User has no password");
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
       if (!user.verified) {
-        console.log('❌ User not verified');
+        console.log("❌ User not verified");
         return res.status(403).json({
           message: "Please verify your email before log in",
           needsVerification: true,
         });
       }
 
-      console.log('🔄 Comparing passwords...');
+      console.log("🔄 Comparing passwords...");
       const isMatch = await bcrypt.compare(
         password as string,
         user.password as string
       );
 
       if (!isMatch) {
-        console.log('❌ Password mismatch');
+        console.log("❌ Password mismatch");
         return res.status(401).json({
           message: "Invalid email or password",
         });
       }
 
-      console.log('✅ Password match - proceeding with login');
+      console.log("✅ Password match - proceeding with login");
 
       // Check if Stripe customer exists in local DB (only if stripe is configured)
       if (stripe && !user.stripeCustomerId) {
-        console.log('🔄 Creating Stripe customer...');
+        console.log("🔄 Creating Stripe customer...");
         // Create new Stripe customer
         const customer = await stripe.customers.create({
           name: `${user.firstName} ${user.lastName}`,
@@ -395,15 +401,15 @@ const authController = {
         await user.update({ stripeCustomerId: customer.id });
         // Refresh user data to get the updated stripeCustomerId
         await user.reload();
-        console.log('✅ Stripe customer created');
+        console.log("✅ Stripe customer created");
       } else if (stripe && user.stripeCustomerId) {
-        console.log('🔄 Verifying existing Stripe customer...');
+        console.log("🔄 Verifying existing Stripe customer...");
         // Verify if customer exists on Stripe
         try {
           await stripe.customers.retrieve(user.stripeCustomerId);
-          console.log('✅ Stripe customer verified');
+          console.log("✅ Stripe customer verified");
         } catch (error) {
-          console.log('🔄 Recreating Stripe customer...');
+          console.log("🔄 Recreating Stripe customer...");
           // If customer doesn't exist on Stripe, create a new one
           const customer = await stripe.customers.create({
             name: `${user.firstName} ${user.lastName}`,
@@ -414,11 +420,11 @@ const authController = {
           await user.update({ stripeCustomerId: customer.id });
           // Refresh user data to get the updated stripeCustomerId
           await user.reload();
-          console.log('✅ Stripe customer recreated');
+          console.log("✅ Stripe customer recreated");
         }
       }
 
-      console.log('🔄 Generating JWT tokens...');
+      console.log("🔄 Generating JWT tokens...");
       // Generate access token
       const token = jwt.sign(
         {
@@ -440,7 +446,7 @@ const authController = {
         { expiresIn: "7d" }
       );
 
-      console.log('🔄 Saving refresh token...');
+      console.log("🔄 Saving refresh token...");
       // Save refresh token to database
       await user.update({ refreshToken });
 
@@ -458,7 +464,7 @@ const authController = {
         type: user.type,
       };
 
-      console.log('✅ Login successful for:', email);
+      console.log("✅ Login successful for:", email);
       res.status(200).json({
         message: "Login successful",
         user: userResponse,
@@ -498,7 +504,7 @@ const authController = {
 
       // Generate reset token
       const resetToken = crypto.randomBytes(32).toString("hex");
-      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${user.email}`;
+      const resetUrl = `${process.env.WEB_URL}/reset-password?token=${resetToken}&email=${user.email}`;
 
       // Set token and expiry (1 hour)
       user.resetPasswordToken = resetToken;

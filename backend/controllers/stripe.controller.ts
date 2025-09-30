@@ -5,7 +5,7 @@ import { AuthenticatedRequest } from "../types/user.js";
 import userController from "./user.controller";
 
 // Initialize Stripe only if API key is available
-const stripe = process.env.STRIPE_SECRET_KEY 
+const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY as string)
   : null;
 
@@ -16,9 +16,9 @@ const isStripeConfigured = (): boolean => {
 
 // Helper function to handle Stripe not configured
 const handleStripeNotConfigured = (res: Response) => {
-  return res.status(503).json({ 
+  return res.status(503).json({
     error: "Payment service not configured",
-    message: "Stripe is not properly configured on this server" 
+    message: "Stripe is not properly configured on this server",
   });
 };
 
@@ -84,8 +84,8 @@ class StripeController {
           },
         ],
         mode: isRecurring ? "subscription" : "payment",
-        success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL}/upgrade`,
+        success_url: `${process.env.WEB_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.WEB_URL}/upgrade`,
         customer: user.stripeCustomerId,
         metadata: {
           userId: String(userId),
