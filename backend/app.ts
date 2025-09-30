@@ -45,46 +45,29 @@ app.use("/api/v1/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Define routes for user and authentication management - MUST BE BEFORE STATIC FILES
+// Static file serving - MUST BE BEFORE API ROUTES
 app.use("/uploads", express.static("uploads"));
 
-// DIRECT ROUTE: Serve logo.png directly to bypass any Railway static file issues
+// Serve logo from root /assets directory
 app.get("/assets/logo.png", (req, res) => {
-  console.log(`�️  Direct logo request from: ${req.ip}`);
+  // Primary: Root assets folder (where logo.png is committed)
+  const rootLogoPath = path.join(process.cwd(), "assets/logo.png");
   
-  // Try to find the logo in various possible locations (NO FRONTEND REFERENCES)
-  const possibleLogoPaths = [
-    path.join(__dirname, "uploads/assets/logo.png"),
-    path.join(__dirname, "assets/logo.png"),
-    path.join(__dirname, "../assets/logo.png"),
-    path.join(__dirname, "../../assets/logo.png"),
-    path.join(process.cwd(), "uploads/assets/logo.png"),
-    path.join(process.cwd(), "assets/logo.png"),
-    path.join(process.cwd(), "dist/assets/logo.png")
-  ];
+  // Fallback: Uploads folder (for user-uploaded logos)
+  const uploadsLogoPath = path.join(process.cwd(), "uploads/assets/logo.png");
   
-  for (let i = 0; i < possibleLogoPaths.length; i++) {
-    const logoPath = possibleLogoPaths[i];
-    console.log(`🔍 Checking logo path ${i + 1}: ${logoPath}`);
-    
-    try {
-      if (fs.existsSync(logoPath)) {
-        console.log(`✅ Found logo at: ${logoPath}`);
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-        return res.sendFile(logoPath);
-      }
-    } catch (error) {
-      console.log(`❌ Error checking logo path: ${(error as Error).message}`);
-    }
+  if (fs.existsSync(rootLogoPath)) {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+    return res.sendFile(rootLogoPath);
+  } else if (fs.existsSync(uploadsLogoPath)) {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.sendFile(uploadsLogoPath);
   }
   
-  console.log(`❌ Logo not found in any expected location`);
-  res.status(404).json({ error: "Logo not found", checkedPaths: possibleLogoPaths });
+  res.status(404).json({ error: "Logo not found" });
 });
-
-// Keep the original static serving as fallback
-app.use("/assets", express.static("uploads")); // Fallback to uploads folder
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
 v1Router.use("/users", userRoutes);
