@@ -26,12 +26,12 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 app.use(cors()); // Enable CORS for cross-origin requests
 
 // Debug middleware for production
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
     next();
@@ -48,24 +48,24 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Static file serving - MUST BE BEFORE API ROUTES
 app.use("/uploads", express.static("uploads"));
 
-// Serve logo from root /assets directory
+// Serve logo from backend/assets directory
 app.get("/assets/logo.png", (req, res) => {
-  // Primary: Root assets folder (where logo.png is committed)
-  const rootLogoPath = path.join(process.cwd(), "assets/logo.png");
-  
+  // Primary: Backend assets folder (deployed with backend)
+  const backendLogoPath = path.join(__dirname, "assets/logo.png");
+
   // Fallback: Uploads folder (for user-uploaded logos)
-  const uploadsLogoPath = path.join(process.cwd(), "uploads/assets/logo.png");
-  
-  if (fs.existsSync(rootLogoPath)) {
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-    return res.sendFile(rootLogoPath);
+  const uploadsLogoPath = path.join(__dirname, "uploads/assets/logo.png");
+
+  if (fs.existsSync(backendLogoPath)) {
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+    return res.sendFile(backendLogoPath);
   } else if (fs.existsSync(uploadsLogoPath)) {
-    res.setHeader('Content-Type', 'image/png');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=86400");
     return res.sendFile(uploadsLogoPath);
   }
-  
+
   res.status(404).json({ error: "Logo not found" });
 });
 const v1Router = express.Router();
@@ -88,12 +88,12 @@ v1Router.use("/fix", passwordUpdateRouter); // Simple password update route
 app.use("/api/v1", v1Router);
 
 app.get("/api/v1/", (req, res) => {
-  res.json({ 
-    Hello: "World", 
-    timestamp: new Date().toISOString(), 
+  res.json({
+    Hello: "World",
+    timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV,
     message: "Backend API is running successfully!",
-    database: "Railway PostgreSQL connected"
+    database: "Railway PostgreSQL connected",
   });
 });
 
