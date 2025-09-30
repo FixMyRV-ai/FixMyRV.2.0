@@ -36,7 +36,8 @@ const authController = {
     }
 
     const token = String(crypto.randomBytes(32).toString("hex")); // Generate a unique token
-    const backendUrl = process.env.BACKEND_URL || process.env.WEB_URL || "http://localhost:3000";
+    const backendUrl =
+      process.env.BACKEND_URL || process.env.WEB_URL || "http://localhost:3000";
     const verificationUrl = `${backendUrl}/api/v1/auth/verify-email?token=${token}&email=${user.email}`;
     // Store the token in the user record for later verification
     user.verificationToken = token;
